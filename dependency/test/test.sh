@@ -41,15 +41,12 @@ function itExists() {
 }
 
 function itHasTheRightShebang() {
-  echo -n "bin/* files have shebang of ''#!/usr/bin/env ruby'"
+  echo -n "bin/* files have shebang of '#!/usr/bin/env ruby'"
 
   local tarball_path
   tarball_path="${1}"
 
   local shebang
-
-  tar -O -xf "${tarball_path}" ./bin/bundle
-  tar -O -xf "${tarball_path}" ./bin/bundler
 
   shebang=$(tar -O -xf "${tarball_path}" ./bin/bundle | head -n1)
   if [[ "${shebang}" != "#!/usr/bin/env ruby" ]]; then
@@ -86,6 +83,11 @@ function itHasTheRightVersion() {
       GEM_PATH="${temp_dir}" \
       ./bin/bundle -v)
 
+    echo ""
+    echo "output from ./bin/bundle -v >>>"
+    echo "${output}"
+    echo "<<<"
+
     echo "${output}" | grep "Bundler version ${version}" > /dev/null
     status=$?
 
@@ -95,6 +97,8 @@ function itHasTheRightVersion() {
     fi
 
   popd > /dev/null || exit 1
+
+  rm -rf "${temp_dir}"
 
   echo "... ✅"
 }
