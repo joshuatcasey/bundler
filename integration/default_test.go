@@ -44,13 +44,14 @@ func testDefault(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it.After(func() {
-			Expect(docker.Container.Remove.Execute(container.ID)).To(Succeed())
-			Expect(docker.Image.Remove.Execute(image.ID)).To(Succeed())
-			Expect(docker.Volume.Remove.Execute(occam.CacheVolumeNames(name))).To(Succeed())
-			Expect(os.RemoveAll(source)).To(Succeed())
+			fmt.Printf("image: %s", image.ID)
+			//Expect(docker.Container.Remove.Execute(container.ID)).To(Succeed())
+			//Expect(docker.Image.Remove.Execute(image.ID)).To(Succeed())
+			//Expect(docker.Volume.Remove.Execute(occam.CacheVolumeNames(name))).To(Succeed())
+			//Expect(os.RemoveAll(source)).To(Succeed())
 		})
 
-		it("installs with the defaults", func() {
+		it.Focus("installs with the defaults", func() {
 			var err error
 			source, err = occam.Source(filepath.Join("testdata", "default_app"))
 			Expect(err).NotTo(HaveOccurred())
@@ -63,6 +64,9 @@ func testDefault(t *testing.T, context spec.G, it spec.S) {
 					settings.Buildpacks.Bundler.Online,
 					settings.Buildpacks.BuildPlan.Online,
 				).
+				WithEnv(map[string]string{
+					"BP_BUNDLER_VERSION": "1.17.3",
+				}).
 				Execute(name, source)
 			Expect(err).ToNot(HaveOccurred(), logs.String)
 
