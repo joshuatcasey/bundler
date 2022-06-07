@@ -1,0 +1,21 @@
+name: [Dependency] Compile Bundler
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version of the dependency
+        required: true
+
+jobs:
+  compile:
+    name: Compile Bundler
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Compile bundler
+        run: echo "version is $VERSION"
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+
