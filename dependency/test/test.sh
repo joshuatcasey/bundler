@@ -48,15 +48,20 @@ function itHasTheRightShebang() {
 
   local shebang
 
+  tar -O -xf "${tarball_path}" ./bin/bundle
+  tar -O -xf "${tarball_path}" ./bin/bundler
+
   shebang=$(tar -O -xf "${tarball_path}" ./bin/bundle | head -n1)
   if [[ "${shebang}" != "#!/usr/bin/env ruby" ]]; then
     echo " ⛔ bin/bundle must have shebang of '#!/usr/bin/env ruby'"
+    echo "shebang=${shebang}"
     exit 1
   fi
 
   shebang=$(tar -O -xf "${tarball_path}" ./bin/bundler | head -n1)
   if [[ "${shebang}" != "#!/usr/bin/env ruby" ]]; then
     echo " ⛔ bin/bundler must have shebang of '#!/usr/bin/env ruby'"
+    echo "shebang=${shebang}"
     exit 1
   fi
 
