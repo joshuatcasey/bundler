@@ -1,4 +1,4 @@
-name: [Dependency] Compile Bundler
+name: Dependency Compile Bundler
 
 on:
   workflow_dispatch:
