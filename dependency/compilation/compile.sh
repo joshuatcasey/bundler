@@ -15,13 +15,12 @@ function main() {
   tarball_name="${NAME}-${version}.tgz"
 
   temp_dir="$(mktemp -d)"
-  output_dir="$(PWD)"
+  output_dir="$(pwd)"
 
   pushd "${temp_dir}" > /dev/null
-    export GEM_HOME="${PWD}"
     unset RUBYOPT; \
-      GEM_HOME="${PWD}" \
-      GEM_PATH="${PWD}" \
+      GEM_HOME="${temp_dir}" \
+      GEM_PATH="${temp_dir}" \
       gem install bundler \
         --version "${version}" \
         --no-document \
