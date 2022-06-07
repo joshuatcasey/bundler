@@ -7,7 +7,7 @@ readonly PROGDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly NAME="bundler"
 
 function main() {
-  local version tarball_name temp_dir
+  local version tarball_name temp_dir output_dir
   version="${1}"
 
   echo "version=${version}"
@@ -15,6 +15,7 @@ function main() {
   tarball_name="${NAME}-${version}.tgz"
 
   temp_dir="$(mktemp -d)"
+  output_dir="$(PWD)"
 
   pushd "${temp_dir}" > /dev/null
     export GEM_HOME="${PWD}"
@@ -28,10 +29,9 @@ function main() {
 
     rm -f "bundler-${version}.gem"
     rm -rf "cache/bundler-${version}.gem"
-    tar czvf "${tarball_name}" --exclude="${tarball_name}" .
+    tar czvf "${output_dir}/${tarball_name}" .
   popd > /dev/null
 
-  cp "${temp_dir}/${tarball_name}" .
   rm -rf "${temp_dir}"
 }
 
