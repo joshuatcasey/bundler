@@ -14,8 +14,20 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Compile bundler
-        run: echo "version is $VERSION"
+      - name: Compile
+        id: compile
+        run: |
+          pushd dependency > /dev/null
+            make compile version="${VERSION}"
+            echo "::set-output name=tarball_path::bundler-${VERSION}.tgz"
+          popd > /dev/null
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+      - name: Test
+        run: |
+          pushd dependency > /dev/null
+            make test version="${VERSION}" tarball_path="${{ steps.compile.outputs.tarball_path }}"
+          popd > /dev/null
         env:
           VERSION: ${{ github.event.inputs.version }}
 
