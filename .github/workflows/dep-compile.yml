@@ -8,16 +8,11 @@ on:
 #        required: true
 
 jobs:
-  compile:
-    name: Compile Bundler
-    strategy:
-      matrix:
-        os:
-        - ubuntu-18.04
-        - ubuntu-22.04
-        - macos-latest
-    runs-on: ${{ matrix.os }}
-    continue-on-error: true
+  retrieve:
+    name: Retrieve new versions
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.retrieve.outputs.new_version }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -33,16 +28,31 @@ jobs:
             echo "Found versions ${versions}"
             echo "::set-output name=new_version::${versions}"
           popd > /dev/null
-      - name: Compile ${{ steps.retrieve.outputs.new_version }}
+  compile:
+    name: Compile Bundler
+    needs:
+      - retrieve
+    strategy:
+      matrix:
+        os:
+        - ubuntu-18.04
+        - ubuntu-22.04
+        - macos-latest
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Compile ${{ needs.retrieve.outputs.new_version }}
         id: compile
         run: |
           pushd dependency > /dev/null
-            make compile version="${{ steps.retrieve.outputs.new_version }}"
-            echo "::set-output name=tarball_path::bundler-${{ steps.retrieve.outputs.new_version }}.tgz"
+            make compile version="${{ needs.retrieve.outputs.new_version }}"
+            echo "::set-output name=tarball_path::bundler-${{ needs.retrieve.outputs.new_version }}.tgz"
           popd > /dev/null
       - run: '[[ $(echo "${OS}" | grep "macos") ]] && brew install coreutils || true'
-      - name: Test ${{ steps.retrieve.outputs.new_version }}
+      - name: Test ${{ needs.retrieve.outputs.new_version }}
         run: |
           pushd dependency > /dev/null
-            make test version="${{ steps.retrieve.outputs.new_version }}" tarball_path="${{ steps.compile.outputs.tarball_path }}" os="${{ matrix.os }}"
+            make test version="${{ needs.retrieve.outputs.new_version }}" tarball_path="${{ steps.compile.outputs.tarball_path }}" os="${{ matrix.os }}"
           popd > /dev/null
