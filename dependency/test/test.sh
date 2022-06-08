@@ -71,7 +71,7 @@ function itHasTheRightVersion() {
   local tarball_path version full_tarball_path
   tarball_path="${1}"
   version="${2}"
-  full_tarball_path=$(realpath "${tarball_path}")
+  full_tarball_path=$(readlink -f "${tarball_path}")
   temp_dir="$(mktemp -d)"
 
   pushd "${temp_dir}" > /dev/null || exit 1
