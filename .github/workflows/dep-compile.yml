@@ -12,7 +12,7 @@ jobs:
     name: Get Operating Systems
     runs-on: ubuntu-latest
     outputs:
-      operating_systems: ${{ steps.get_operating_systems.outputs.operating_systems }}
+      operating_systems: ${{ steps.get_operating_systems.output.operating_systems }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -22,6 +22,8 @@ jobs:
           operatingSystems=$(cat dependency/operating_systems.json)
           echo "Found operatingSystems ${operatingSystems}"
           echo "::set-output name=operating_systems::${operatingSystems}"
+      - name: Found ${{ steps.get_operating_systems.output.operating_systems }}
+        run: echo ${{ steps.get_operating_systems.output.operating_systems }}
   retrieve:
     name: Retrieve new versions
     runs-on: ubuntu-latest
@@ -42,9 +44,8 @@ jobs:
             echo "Found versions ${versions}"
             echo "::set-output name=new_versions::${versions}"
           popd > /dev/null
-      - name: New Versions Found! ${{ steps.retrieve.output.new_versions }}
-        if: ${{ steps.retrieve.output.new_versions != '' && steps.retrieve.output.new_versions != null }}
-        run: ''
+      - name: Found ${{ steps.retrieve.output.new_versions }}
+        run: echo ${{ steps.retrieve.output.new_versions }}
   compile:
     name: Compile Bundler
     needs:
