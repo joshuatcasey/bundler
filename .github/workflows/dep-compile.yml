@@ -40,7 +40,7 @@ jobs:
             make compile version="${{ steps.retrieve.outputs.new_version }}"
             echo "::set-output name=tarball_path::bundler-${{ steps.retrieve.outputs.new_version }}.tgz"
           popd > /dev/null
-      - run: [[ $(echo "${OS}" | grep "macos") ]] && brew install coreutils || true
+      - run: '[[ $(echo "${OS}" | grep "macos") ]] && brew install coreutils || true'
       - name: Test ${{ steps.retrieve.outputs.new_version }}
         run: |
           pushd dependency > /dev/null
