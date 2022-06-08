@@ -8,6 +8,20 @@ on:
 #        required: true
 
 jobs:
+  get_operating_systems:
+    name: Get Operating Systems
+    runs-on: ubuntu-latest
+    outputs:
+      operating_systems: ${{ steps.get_operating_systems.outputs.operating_systems }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Get Operating Systems
+        id: get_operating_systems
+        run: |
+          operatingSystems=$(cat operating_systems.json)
+          echo "Found operatingSystems ${operatingSystems}"
+          echo "::set-output name=operating_systems::${operatingSystems}"
   retrieve:
     name: Retrieve new versions
     runs-on: ubuntu-latest
@@ -20,7 +34,7 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: '>=1.18.0'
-      - name: Retrieve new version
+      - name: Retrieve new versions
         id: retrieve
         run: |
           pushd dependency > /dev/null
@@ -28,16 +42,16 @@ jobs:
             echo "Found versions ${versions}"
             echo "::set-output name=new_versions::${versions}"
           popd > /dev/null
+      - name: New Versions Found! ${{ steps.retrieve.output.new_versions }}
+        if: ${{ steps.retrieve.output.new_versions != '' && steps.retrieve.output.new_versions != null }}
   compile:
     name: Compile Bundler
     needs:
+      - get_operating_systems
       - retrieve
     strategy:
       matrix:
-        os:
-        - ubuntu-18.04
-        - ubuntu-22.04
-        - macos-latest
+        os: ${{ fromJSON(needs.get_operating_systems.outputs.operating_systems) }}
         version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
     runs-on: ${{ matrix.os }}
     continue-on-error: true
