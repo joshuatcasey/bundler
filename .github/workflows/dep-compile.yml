@@ -44,6 +44,7 @@ jobs:
           popd > /dev/null
       - name: New Versions Found! ${{ steps.retrieve.output.new_versions }}
         if: ${{ steps.retrieve.output.new_versions != '' && steps.retrieve.output.new_versions != null }}
+        run: ''
   compile:
     name: Compile Bundler
     needs:
