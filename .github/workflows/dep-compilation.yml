@@ -17,6 +17,7 @@ jobs:
         - ubuntu-22.04
         - macos-latest
     runs-on: ${{ matrix.os }}
+    continue-on-error: true
     steps:
       - name: Check out code
         uses: actions/checkout@v2
