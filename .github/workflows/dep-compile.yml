@@ -19,7 +19,7 @@ jobs:
       - name: Get Operating Systems
         id: get_operating_systems
         run: |
-          operatingSystems=$(cat operating_systems.json)
+          operatingSystems=$(cat dependency/operating_systems.json)
           echo "Found operatingSystems ${operatingSystems}"
           echo "::set-output name=operating_systems::${operatingSystems}"
   retrieve:
