@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/paketo-buildpacks/packit/v2/cargo"
@@ -27,7 +26,11 @@ func main() {
 	versionsFilteredByPatches := filterToPatches(versionsFilteredByConstraints, config, buildpackVersions)
 
 	if len(versionsFilteredByPatches) > 0 {
-		fmt.Printf("[ %s ]", strings.Join(versionsFilteredByPatches, ", "))
+		bytes, err := json.Marshal(versionsFilteredByPatches)
+		if err != nil {
+			return
+		}
+		fmt.Println(string(bytes))
 	}
 }
 
