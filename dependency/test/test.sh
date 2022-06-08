@@ -83,11 +83,6 @@ function itHasTheRightVersion() {
       GEM_PATH="${temp_dir}" \
       ./bin/bundle -v)
 
-    echo ""
-    echo "output from ./bin/bundle -v >>>"
-    echo "${output}"
-    echo "<<<"
-
     echo "${output}" | grep "Bundler version ${version}" > /dev/null
     status=$?
 

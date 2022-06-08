@@ -21,7 +21,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - uses: actions/setup-go@v3
+      - name: Setup go >=1.18.0
+        uses: actions/setup-go@v3
         with:
           go-version: '>=1.18.0'
       - name: Retrieve new version
@@ -30,9 +31,9 @@ jobs:
           pushd dependency > /dev/null
             versions=$(make retrieve)
             echo "Found versions ${versions}"
-            echo "::set-output name=new_version::$(make retrieve)"
+            echo "::set-output name=new_version::${versions}"
           popd > /dev/null
-      - name: Compile
+      - name: Compile ${{ steps.retrieve.outputs.new_version }}
         id: compile
         run: |
           pushd dependency > /dev/null
@@ -41,7 +42,7 @@ jobs:
           popd > /dev/null
         env:
           VERSION: ${{ steps.retrieve.outputs.new_version }}
-      - name: Test
+      - name: Test ${{ steps.retrieve.outputs.new_version }}
         run: |
           pushd dependency > /dev/null
             make test version="${VERSION}" tarball_path="${{ steps.compile.outputs.tarball_path }}"

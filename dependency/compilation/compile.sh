@@ -28,7 +28,8 @@ function main() {
 
     rm -f "bundler-${version}.gem"
     rm -rf "cache/bundler-${version}.gem"
-    sed -i 's/#!.*ruby.*/#!\/usr\/bin\/env ruby/g' bin/*
+    sed -i.bak 's/#!.*ruby.*/#!\/usr\/bin\/env ruby/g' bin/*
+    rm bin/*.bak
     tar czvf "${output_dir}/${tarball_name}" .
   popd > /dev/null
 
