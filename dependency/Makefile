@@ -7,7 +7,7 @@ test:
 	@./test/test.sh $(tarball_path) $(version)
 
 retrieve:
-	@./retrieval/retrieve.sh
+	@./retrieval/retrieve
 
 annotate:
 	@./metadata/annotate.sh

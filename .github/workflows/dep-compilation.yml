@@ -30,8 +30,6 @@ jobs:
           popd > /dev/null
         env:
           VERSION: ${{ github.event.inputs.version }}
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
       - name: Test
         run: |
           pushd dependency > /dev/null
