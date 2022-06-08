@@ -4,7 +4,7 @@ compile:
 	@./compilation/compile.sh $(version)
 
 test:
-	@./test/test.sh $(tarball_path) $(version)
+	@./test/test.sh $(tarball_path) $(version) $(os)
 
 retrieve:
 	@./retrieval/retrieve.sh

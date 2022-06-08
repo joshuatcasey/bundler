@@ -37,15 +37,12 @@ jobs:
         id: compile
         run: |
           pushd dependency > /dev/null
-            make compile version="${VERSION}"
-            echo "::set-output name=tarball_path::bundler-${VERSION}.tgz"
+            make compile version="${{ steps.retrieve.outputs.new_version }}"
+            echo "::set-output name=tarball_path::bundler-${{ steps.retrieve.outputs.new_version }}.tgz"
           popd > /dev/null
-        env:
-          VERSION: ${{ steps.retrieve.outputs.new_version }}
+      - run: [[ $(echo "${OS}" | grep "macos") ]] && brew install coreutils || true
       - name: Test ${{ steps.retrieve.outputs.new_version }}
         run: |
           pushd dependency > /dev/null
-            make test version="${VERSION}" tarball_path="${{ steps.compile.outputs.tarball_path }}"
+            make test version="${{ steps.retrieve.outputs.new_version }}" tarball_path="${{ steps.compile.outputs.tarball_path }}" os="${{ matrix.os }}"
           popd > /dev/null
-        env:
-          VERSION: ${{ steps.retrieve.outputs.new_version }}

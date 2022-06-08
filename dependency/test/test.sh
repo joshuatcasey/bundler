@@ -68,10 +68,13 @@ function itHasTheRightShebang() {
 function itHasTheRightVersion() {
   echo -n "'bin/bundle -v' prints the right version"
 
-  local tarball_path version full_tarball_path
+  local tarball_path version os full_tarball_path
   tarball_path="${1}"
   version="${2}"
-  full_tarball_path=$(readlink -f "${tarball_path}")
+  os="${3}"
+  echo "OS=${os}"
+
+  full_tarball_path=$(realpath "${tarball_path}")
   temp_dir="$(mktemp -d)"
 
   pushd "${temp_dir}" > /dev/null || exit 1
@@ -106,5 +109,3 @@ function main(){
 }
 
 main "${@:-}"
-
-# https://github.com/paketo-buildpacks/dep-server/blob/main/actions/test-dependency/dependency-tests/bundler/run
