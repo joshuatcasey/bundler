@@ -28,6 +28,8 @@ jobs:
         id: retrieve
         run: |
           pushd dependency > /dev/null
+            versions=$(make retrieve)
+            echo "Found versions ${versions}"
             echo "::set-output name=new_version::$(make retrieve)"
           popd > /dev/null
       - name: Compile
@@ -45,5 +47,4 @@ jobs:
             make test version="${VERSION}" tarball_path="${{ steps.compile.outputs.tarball_path }}"
           popd > /dev/null
         env:
-          VERSION: ${{ github.event.inputs.version }}
-
+          VERSION: ${{ steps.retrieve.outputs.new_version }}
