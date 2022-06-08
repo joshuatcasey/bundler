@@ -12,7 +12,7 @@ jobs:
     name: Retrieve new versions
     runs-on: ubuntu-latest
     outputs:
-      new_version: ${{ steps.retrieve.outputs.new_version }}
+      new_versions: ${{ steps.retrieve.outputs.new_versions }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -26,7 +26,7 @@ jobs:
           pushd dependency > /dev/null
             versions=$(make retrieve)
             echo "Found versions ${versions}"
-            echo "::set-output name=new_version::${versions}"
+            echo "::set-output name=new_versions::${versions}"
           popd > /dev/null
   compile:
     name: Compile Bundler
@@ -38,21 +38,22 @@ jobs:
         - ubuntu-18.04
         - ubuntu-22.04
         - macos-latest
+        version: ${{ needs.retrieve.outputs.new_version }}
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Compile ${{ needs.retrieve.outputs.new_version }}
+      - name: Compile ${{ matrix.version }}
         id: compile
         run: |
           pushd dependency > /dev/null
-            make compile version="${{ needs.retrieve.outputs.new_version }}"
-            echo "::set-output name=tarball_path::bundler-${{ needs.retrieve.outputs.new_version }}.tgz"
+            make compile version="${{ matrix.version }}"
+            echo "::set-output name=tarball_path::bundler-${{ matrix.version }}.tgz"
           popd > /dev/null
-      - run: '[[ $(echo "${OS}" | grep "macos") ]] && brew install coreutils || true'
-      - name: Test ${{ needs.retrieve.outputs.new_version }}
+      - run: '[[ $(echo "${{ matrix.os }}" | grep "macos") ]] && brew install coreutils || true'
+      - name: Test ${{ matrix.version }}
         run: |
           pushd dependency > /dev/null
-            make test version="${{ needs.retrieve.outputs.new_version }}" tarball_path="${{ steps.compile.outputs.tarball_path }}" os="${{ matrix.os }}"
+            make test version="${{ matrix.version }}" tarball_path="${{ steps.compile.outputs.tarball_path }}" os="${{ matrix.os }}"
           popd > /dev/null

@@ -24,13 +24,13 @@ func main() {
 	rubyGemVersions := getRubyGemVersions()
 	versionsFilteredByConstraints := filterToConstraints(config, rubyGemVersions)
 	versionsFilteredByPatches := filterToPatches(versionsFilteredByConstraints, config, buildpackVersions)
-	//bytes, err := json.Marshal(versionsFilteredByPatches)
-	//if err != nil {
-	//	return
-	//}
-	//fmt.Println(string(bytes))
+
 	if len(versionsFilteredByPatches) > 0 {
-		fmt.Println(versionsFilteredByPatches[0])
+		bytes, err := json.Marshal(versionsFilteredByPatches)
+		if err != nil {
+			return
+		}
+		fmt.Println(string(bytes))
 	}
 }
 
