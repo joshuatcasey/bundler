@@ -54,13 +54,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       metadata: ${{ steps.metadata.outputs.metadata }}
-      uri: ${{ steps.metadata.outputs.uri }}
-      sha256: ${{ steps.metadata.outputs.sha256 }}
-      release-date: ${{ steps.metadata.outputs.release-date }}
-      deprecation-date: ${{ steps.metadata.outputs.deprecation-date }}
-      cpe: ${{ steps.metadata.outputs.cpe }}
-      purl: ${{ steps.metadata.outputs.purl }}
-      licenses: ${{ steps.metadata.outputs.licenses }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -70,18 +63,16 @@ jobs:
           set -euo pipefail
           pushd dependency > /dev/null
             metadata=$(make metadata version="${{ matrix.version }}")
-          
+            echo "${metadata}" > "metadata-${{ matrix.version }}.json"
             echo "::set-output name=metadata::${metadata}"
-            echo "::set-output name=uri::$(jq -r .uri <<< "${metadata}")"
-            echo "::set-output name=sha256::$(jq -r .sha256 <<< "${metadata}")"
-            echo "::set-output name=release-date::$(jq -r '.release_date // empty' <<< "${metadata}")"
-            echo "::set-output name=deprecation-date::$(jq -r '.deprecation_date // empty' <<< "${metadata}")"
-            echo "::set-output name=cpe::$(jq -r .cpe <<< "${metadata}")"
-            echo "::set-output name=purl::$(jq -r .purl <<< "${metadata}")"
-            echo "::set-output name=licenses::$(jq -c .licenses <<< "${metadata}")"
           popd > /dev/null
       - name: Found ${{ steps.metadata.outputs.metadata }}
         run: echo ${{ steps.metadata.outputs.metadata }}
+      - name: Cache Metadata
+        uses: actions/cache@v3
+        with:
+          path: metadata-${{ matrix.version }}.json
+          key: metadata-${{ matrix.version }}.json
   compile:
     name: Compile Bundler
     needs:
@@ -125,5 +116,9 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Prints metadata-${{ matrix.version }} ${{ format('needs.metadata.outputs.metadata-{0}', matrix.version) }}
-        run: echo metadata-${{ matrix.version }} ${{ format('needs.metadata.outputs.metadata-{0}', matrix.version) }}
+      - name: Retrieve Metadata
+        uses: actions/cache@v3
+        with:
+          key: metadata-${{ matrix.version }}.json
+      - name: Prints metadata-${{ matrix.version }}.json
+        run: cat metadata-${{ matrix.version }}.json

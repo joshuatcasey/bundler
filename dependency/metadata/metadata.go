@@ -15,18 +15,13 @@ import (
 	"github.com/go-enry/go-license-detector/v4/licensedb"
 	"github.com/go-enry/go-license-detector/v4/licensedb/filer"
 	"github.com/package-url/packageurl-go"
+	"github.com/paketo-buildpacks/packit/v2/cargo"
 	"github.com/paketo-buildpacks/packit/vacation"
 )
 
 type DepVersion struct {
-	Version         string     `json:"version"`
-	URI             string     `json:"uri"`
-	SHA256          string     `json:"sha256"`
-	ReleaseDate     *time.Time `json:"release_date,omitempty"`
-	DeprecationDate *time.Time `json:"deprecation_date,omitempty"`
-	CPE             string     `json:"cpe"`
-	PURL            string     `json:"purl"`
-	Licenses        []string   `json:"licenses"`
+	cargo.ConfigMetadataDependency
+	ReleaseDate *time.Time `json:"release_date,omitempty"`
 }
 
 func main() {
@@ -43,23 +38,19 @@ func getDependencyVersion(version string) DepVersion {
 	bundlerReleases := getRubyGemVersions()
 
 	depURL := fmt.Sprintf("https://rubygems.org/downloads/bundler-%s.gem", version)
-
-	licenses, err := lookupLicenses(depURL)
-	if err != nil {
-		panic(fmt.Errorf("could not get retrieve licenses: %w", err))
-	}
-
 	for _, release := range bundlerReleases {
 		if release.Version.String() == version {
 			return DepVersion{
-				Version:         version,
-				URI:             depURL,
-				SHA256:          release.SHA,
-				ReleaseDate:     &release.ReleaseDate,
-				DeprecationDate: nil,
-				CPE:             fmt.Sprintf("cpe:2.3:a:bundler:bundler:%s:*:*:*:*:ruby:*:*", version),
-				PURL:            generatePURL("bundler", version, release.SHA, depURL),
-				Licenses:        licenses,
+				ConfigMetadataDependency: cargo.ConfigMetadataDependency{
+					Version:         version,
+					URI:             depURL,
+					SHA256:          release.SHA,
+					DeprecationDate: nil,
+					CPE:             fmt.Sprintf("cpe:2.3:a:bundler:bundler:%s:*:*:*:*:ruby:*:*", version),
+					PURL:            generatePURL("bundler", version, release.SHA, depURL),
+					Licenses:        lookupLicenses(depURL),
+				},
+				ReleaseDate: &release.ReleaseDate,
 			}
 		}
 	}
@@ -116,41 +107,41 @@ func getRubyGemVersions() []PrettyBundlerRelease {
 	return rubyGemVersions
 }
 
-func lookupLicenses(sourceURL string) ([]string, error) {
+func lookupLicenses(sourceURL string) []interface{} {
 	// getting the dependency artifact from sourceURL
 	resp, err := http.Get(sourceURL)
 	if err != nil {
-		return []string{}, fmt.Errorf("failed to query url: %w", err)
+		panic(fmt.Errorf("failed to query url: %w", err))
 	}
 	if resp.StatusCode != http.StatusOK {
-		return []string{}, fmt.Errorf("failed to query url %s with: status code %d", sourceURL, resp.StatusCode)
+		panic(fmt.Errorf("failed to query url %s with: status code %d", sourceURL, resp.StatusCode))
 	}
 
 	// decompressing the dependency artifact
 	tempDir, err := os.MkdirTemp("", "destination")
 	if err != nil {
-		return []string{}, err
+		panic(err)
 	}
 	defer os.RemoveAll(tempDir)
 
 	err = bundlerDecompress(resp.Body, tempDir)
 	if err != nil {
-		return []string{}, err
+		panic(err)
 	}
 
 	// scanning artifact for license file
 	filer, err := filer.FromDirectory(tempDir)
 	if err != nil {
-		return []string{}, fmt.Errorf("failed to setup a licensedb filer: %w", err)
+		panic(fmt.Errorf("failed to setup a licensedb filer: %w", err))
 	}
 
 	licenses, err := licensedb.Detect(filer)
 	// if no licenses are found, just return an empty slice.
 	if err != nil {
 		if err.Error() != "no license file was found" {
-			return []string{}, fmt.Errorf("failed to detect licenses: %w", err)
+			panic(fmt.Errorf("failed to detect licenses: %w", err))
 		}
-		return []string{}, nil
+		return []interface{}{}
 	}
 
 	// Only return the license IDs, in alphabetical order
@@ -160,7 +151,12 @@ func lookupLicenses(sourceURL string) ([]string, error) {
 	}
 	sort.Strings(licenseIDs)
 
-	return licenseIDs, nil
+	var licenseIDsAsInterface []interface{}
+	for _, licenseID := range licenseIDs {
+		licenseIDsAsInterface = append(licenseIDsAsInterface, licenseID)
+	}
+
+	return licenseIDsAsInterface
 }
 
 // The bundler dependency comes as a .gem file (tar.gz mime type) with a
