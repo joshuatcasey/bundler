@@ -13,6 +13,8 @@ function main() {
   if [[ $isMacOs -eq 0 ]]; then
     brew install coreutils
   fi
+
+  return 0
 }
 
 main "${@:-}"
