@@ -97,20 +97,27 @@ jobs:
         run: |
           pushd dependency > /dev/null
             make compile version="${{ matrix.version }}"
-            echo "::set-output name=tarball_path::bundler-${{ matrix.version }}.tgz"
+            echo "::set-output name=tarball_path::bundler-${{ matrix.version }}-${{ matrix.os }}.tgz"
           popd > /dev/null
       - name: Test ${{ matrix.version }}
         run: |
           pushd dependency > /dev/null
             make test version="${{ matrix.version }}" tarball_path="${{ steps.compile.outputs.tarball_path }}" os="${{ matrix.os }}"
           popd > /dev/null
+      - name: Cache Tarball for ${{ matrix.version }}
+        uses: actions/cache@v3
+        with:
+          path: dependency/${{ steps.compile.outputs.tarball_path }}
+          key: dependency/${{ steps.compile.outputs.tarball_path }}
   create-pull-request:
     name: Create Pull Request
     needs:
       - retrieve
       - metadata
+      - compile
     strategy:
       matrix:
+        os: ${{ fromJSON(needs.get_operating_systems.outputs.operating_systems) }}
         version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
     runs-on: ubuntu-latest
     steps:
@@ -121,10 +128,14 @@ jobs:
         with:
           path: dependency/metadata-${{ matrix.version }}.json
           key: metadata-${{ matrix.version }}.json
-      - name: Prints metadata-${{ matrix.version }}.json
+      - name: Print dependency/metadata-${{ matrix.version }}.json
+        run: cat dependency/metadata-${{ matrix.version }}.json
+      - name: Retrieve Tarball for ${{ matrix.version }}-${{ matrix.os }}
+        uses: actions/cache@v3
+        with:
+          path: dependency/bundler-${{ matrix.version }}-${{ matrix.os }}.tgz
+          key: dependency/bundler-${{ matrix.version }}-${{ matrix.os }}.tgz
+      - name: Describe dependency/bundler-${{ matrix.version }}-${{ matrix.os }}.tgz
         run: |
-          set +e
-          ls -lsa
-          ls -lsa dependency
-          cat metadata-${{ matrix.version }}.json
-          cat dependency/metadata-${{ matrix.version }}.json
+          ls -lsa dependency/bundler-${{ matrix.version }}-${{ matrix.os }}.tgz
+          gensha256 dependency/bundler-${{ matrix.version }}-${{ matrix.os }}.tgz

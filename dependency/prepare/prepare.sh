@@ -13,6 +13,9 @@ function main() {
 
   if [[ $isMacOs -eq 0 ]]; then
     brew install coreutils
+    alias gensha256=shasum --algorithm=256
+  else # assume ubuntu
+    alias gensha256=sha256sum
   fi
 
   return 0
