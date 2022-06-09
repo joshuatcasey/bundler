@@ -87,11 +87,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Prepare
-        run: |
-          pushd dependency > /dev/null
-            make prepare os="${{ matrix.os }}"
-          popd > /dev/null
+      - name: Prepare ${{ matrix.os }}
+        run: . dependency/prepare/${{ matrix.os }}
       - name: Setup tarball name
         id: tarball_name
         run: |
@@ -128,6 +125,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
+      - name: Prepare ${{ matrix.os }}
+        run: . dependency/prepare/${{ matrix.os }}
       - name: Setup tarball name
         id: tarball_name
         run: |
@@ -147,7 +146,6 @@ jobs:
       - name: Describe dependency/${{ steps.tarball_name.outputs.tarball_name }}
         run: |
           pushd dependency > /dev/null
-            make prepare os="${{ matrix.os }}"
             ls -lsa ${{ steps.tarball_name.outputs.tarball_name }}
             gensha256 ${{ steps.tarball_name.outputs.tarball_name }}
           popd > /dev/null

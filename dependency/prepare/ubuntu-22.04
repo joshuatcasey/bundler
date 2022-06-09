@@ -1,0 +1,1 @@
+alias gensha256=sha256sum

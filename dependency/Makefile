@@ -11,6 +11,3 @@ retrieve:
 
 metadata:
 	@./metadata/metadata.sh $(version)
-
-prepare:
-	@./prepare/prepare.sh $(os)
