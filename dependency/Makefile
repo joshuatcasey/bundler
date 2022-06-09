@@ -1,4 +1,4 @@
-.PHONY: compile test retrieve metadata
+.PHONY: compile test retrieve metadata prepare
 
 compile:
 	@./compilation/compile.sh $(version)
@@ -9,5 +9,8 @@ test:
 retrieve:
 	@./retrieval/retrieve.sh
 
-annotate:
+metadata:
 	@./metadata/annotate.sh
+
+prepare:
+	@./prepare/prepare.sh $(os)

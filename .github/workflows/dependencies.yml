@@ -58,6 +58,11 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
+      - name: Prepare
+        run: |
+          pushd dependency > /dev/null
+            make prepare os="${{ matrix.os }}"
+          popd > /dev/null
       - name: Compile ${{ matrix.version }}
         id: compile
         run: |
@@ -65,7 +70,6 @@ jobs:
             make compile version="${{ matrix.version }}"
             echo "::set-output name=tarball_path::bundler-${{ matrix.version }}.tgz"
           popd > /dev/null
-      - run: '[[ $(echo "${{ matrix.os }}" | grep "macos") ]] && brew install coreutils || true'
       - name: Test ${{ matrix.version }}
         run: |
           pushd dependency > /dev/null
