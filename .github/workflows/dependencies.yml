@@ -1,11 +1,9 @@
-name: Dependencies Compile
+name: Dependencies (Retrieve, Metadata, Compile, Test, Create PR)
 
 on:
   workflow_dispatch:
-#    inputs:
-#      version:
-#        description: Version of the dependency
-#        required: true
+  schedule:
+    - cron: '0 */12 * * *'  # https://crontab.guru/every-12-hours
 
 jobs:
   get_operating_systems:

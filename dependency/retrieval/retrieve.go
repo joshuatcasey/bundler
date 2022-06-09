@@ -17,6 +17,8 @@ type BundlerRelease struct {
 	Version string `json:"number"`
 }
 
+var id = "bundler"
+
 func main() {
 	config := parseBuildpackToml()
 
@@ -75,11 +77,15 @@ func filterToPatches(versionsFilteredByConstraints map[string][]*semver.Version,
 func filterToConstraints(config cargo.Config, rubyGemVersions []*semver.Version) map[string][]*semver.Version {
 	semverConstraints := make(map[string]*semver.Constraints)
 	for _, constraint := range config.Metadata.DependencyConstraints {
-		c, err := semver.NewConstraint(constraint.Constraint)
+		if constraint.ID != id {
+			continue
+		}
+
+		semverConstraint, err := semver.NewConstraint(constraint.Constraint)
 		if err != nil {
 			panic(err)
 		}
-		semverConstraints[constraint.ID] = c
+		semverConstraints[constraint.ID] = semverConstraint
 	}
 
 	newVersions := make(map[string][]*semver.Version)
@@ -137,6 +143,9 @@ func getRubyGemVersions() []*semver.Version {
 func getBuildpackVersions(config cargo.Config) []string {
 	var buildpackVersions []string
 	for _, d := range config.Metadata.Dependencies {
+		if d.ID != id {
+			continue
+		}
 		buildpackVersions = append(buildpackVersions, d.Version)
 	}
 	return buildpackVersions
