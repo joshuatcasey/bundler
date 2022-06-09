@@ -113,3 +113,13 @@ jobs:
           pushd dependency > /dev/null
             make test version="${{ matrix.version }}" tarball_path="${{ steps.compile.outputs.tarball_path }}" os="${{ matrix.os }}"
           popd > /dev/null
+  pull-request:
+    name: Prepare Pull Request
+    needs:
+      - metadata
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Prints metadata ${{ needs.metadata.outputs.metadata }}
+        run: echo metadata ${{ needs.metadata.outputs.metadata }}
