@@ -116,9 +116,10 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Retrieve Metadata
+      - name: Retrieve Metadata for ${{ matrix.version }}
         uses: actions/cache@v3
         with:
+          path: metadata-${{ matrix.version }}.json
           key: metadata-${{ matrix.version }}.json
       - name: Prints metadata-${{ matrix.version }}.json
         run: cat metadata-${{ matrix.version }}.json
