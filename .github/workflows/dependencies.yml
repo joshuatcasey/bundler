@@ -95,7 +95,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     steps:
-      - name: Check Cached Tarball for ${{ matrix.version }}
+      - name: Setup tarball name
+        id: tarball_name
+        if: steps.cache.outputs.cache-check != 'true'
+        run: |
+          echo "::set-output name=tarball_name::$(cat dependency/NAME)-${{ matrix.version }}-${{ matrix.os }}.tgz"
+      - name: Check Cached Tarball 'dependency/${{ steps.tarball_name.outputs.tarball_name }}'
         id: cache-check
         uses: actions/cache@v3
         with:
@@ -107,11 +112,6 @@ jobs:
       - name: Prepare ${{ matrix.os }}
         if: steps.cache.outputs.cache-check != 'true'
         run: . dependency/prepare/${{ matrix.os }}
-      - name: Setup tarball name
-        id: tarball_name
-        if: steps.cache.outputs.cache-check != 'true'
-        run: |
-          echo "::set-output name=tarball_name::$(cat dependency/NAME)-${{ matrix.version }}-${{ matrix.os }}.tgz"
       - name: Compile '${{ steps.tarball_name.outputs.tarball_name }}'
         if: steps.cache.outputs.cache-check != 'true'
         id: compile
@@ -125,7 +125,7 @@ jobs:
           pushd dependency > /dev/null
             make test version="${{ matrix.version }}" tarball_name="${{ steps.tarball_name.outputs.tarball_name }}" os="${{ matrix.os }}"
           popd > /dev/null
-      - name: Cache Tarball for ${{ matrix.version }}
+      - name: Cache Tarball 'dependency/${{ steps.tarball_name.outputs.tarball_name }}'
         if: steps.cache.outputs.cache-check != 'true'
         uses: actions/cache@v3
         with:
