@@ -124,14 +124,10 @@ jobs:
         os: ${{ fromJSON(needs.get_operating_systems.outputs.operating_systems) }}
         version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Prepare
-        run: |
-          pushd dependency > /dev/null
-            make prepare os="${{ matrix.os }}"
-          popd > /dev/null
       - name: Setup tarball name
         id: tarball_name
         run: |
@@ -150,5 +146,8 @@ jobs:
           key: dependency/${{ steps.tarball_name.outputs.tarball_name }}
       - name: Describe dependency/${{ steps.tarball_name.outputs.tarball_name }}
         run: |
-          ls -lsa dependency/${{ steps.tarball_name.outputs.tarball_name }}
-          gensha256 dependency/${{ steps.tarball_name.outputs.tarball_name }}
+          pushd dependency > /dev/null
+            make prepare os="${{ matrix.os }}"
+            ls -lsa ${{ steps.tarball_name.outputs.tarball_name }}
+            gensha256 ${{ steps.tarball_name.outputs.tarball_name }}
+          popd > /dev/null
