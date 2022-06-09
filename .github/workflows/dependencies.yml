@@ -74,7 +74,7 @@ jobs:
           path: dependency/metadata-${{ matrix.version }}.json
           key: metadata-${{ matrix.version }}.json
   compile:
-    name: Compile Bundler
+    name: Compile
     needs:
       - get_operating_systems
       - retrieve
@@ -95,7 +95,7 @@ jobs:
       - name: Setup tarball name
         id: tarball_name
         run: |
-          echo "::set-output name=tarball_name::bundler-${{ matrix.version }}-${{ matrix.os }}.tgz"
+          echo "::set-output name=tarball_name::$(cat dependency/NAME)-${{ matrix.version }}-${{ matrix.os }}.tgz"
       - name: Compile '${{ steps.tarball_name.outputs.tarball_name }}'
         id: compile
         run: |
@@ -132,6 +132,10 @@ jobs:
           pushd dependency > /dev/null
             make prepare os="${{ matrix.os }}"
           popd > /dev/null
+      - name: Setup tarball name
+        id: tarball_name
+        run: |
+          echo "::set-output name=tarball_name::$(cat dependency/NAME)-${{ matrix.version }}-${{ matrix.os }}.tgz"
       - name: Retrieve Metadata for ${{ matrix.version }}
         uses: actions/cache@v3
         with:
@@ -142,9 +146,9 @@ jobs:
       - name: Retrieve Tarball for ${{ matrix.version }}-${{ matrix.os }}
         uses: actions/cache@v3
         with:
-          path: dependency/bundler-${{ matrix.version }}-${{ matrix.os }}.tgz
-          key: dependency/bundler-${{ matrix.version }}-${{ matrix.os }}.tgz
-      - name: Describe dependency/bundler-${{ matrix.version }}-${{ matrix.os }}.tgz
+          path: dependency/${{ steps.tarball_name.outputs.tarball_name }}
+          key: dependency/${{ steps.tarball_name.outputs.tarball_name }}
+      - name: Describe dependency/${{ steps.tarball_name.outputs.tarball_name }}
         run: |
-          ls -lsa dependency/bundler-${{ matrix.version }}-${{ matrix.os }}.tgz
-          gensha256 dependency/bundler-${{ matrix.version }}-${{ matrix.os }}.tgz
+          ls -lsa dependency/${{ steps.tarball_name.outputs.tarball_name }}
+          gensha256 dependency/${{ steps.tarball_name.outputs.tarball_name }}
