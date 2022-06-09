@@ -127,6 +127,11 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
+      - name: Prepare
+        run: |
+          pushd dependency > /dev/null
+            make prepare os="${{ matrix.os }}"
+          popd > /dev/null
       - name: Retrieve Metadata for ${{ matrix.version }}
         uses: actions/cache@v3
         with:
