@@ -121,5 +121,5 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Prints metadata ${{ needs.metadata.outputs.metadata }}
-        run: echo metadata ${{ needs.metadata.outputs.metadata }}
+      - name: Prints metadata-${{ matrix.version }} ${{ format('needs.metadata.outputs.metadata-{0}', matrix.version) }}
+        run: echo metadata-${{ matrix.version }} ${{ format('needs.metadata.outputs.metadata-{0}', matrix.version) }}
