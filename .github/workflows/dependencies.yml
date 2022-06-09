@@ -53,7 +53,7 @@ jobs:
         version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
     runs-on: ubuntu-latest
     outputs:
-      metadata: ${{ steps.metadata.outputs.metadata }}
+      metadata-${{ matrix.version }}: ${{ steps.metadata.outputs.metadata }}
       uri: ${{ steps.metadata.outputs.uri }}
       sha256: ${{ steps.metadata.outputs.sha256 }}
       release-date: ${{ steps.metadata.outputs.release-date }}
@@ -113,8 +113,8 @@ jobs:
           pushd dependency > /dev/null
             make test version="${{ matrix.version }}" tarball_path="${{ steps.compile.outputs.tarball_path }}" os="${{ matrix.os }}"
           popd > /dev/null
-  pull-request:
-    name: Prepare Pull Request
+  create-pull-request:
+    name: Create Pull Request
     needs:
       - metadata
     runs-on: ubuntu-latest
