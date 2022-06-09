@@ -10,7 +10,7 @@ retrieve:
 	@./retrieval/retrieve.sh
 
 metadata:
-	@./metadata/annotate.sh
+	@./metadata/metadata.sh $(version)
 
 prepare:
 	@./prepare/prepare.sh $(os)

@@ -15,6 +15,8 @@ import (
 
 type BundlerRelease struct {
 	Version string `json:"number"`
+	Date    string `json:"created_at"`
+	SHA     string `json:"sha"`
 }
 
 var id = "bundler"

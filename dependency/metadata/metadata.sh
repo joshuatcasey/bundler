@@ -6,7 +6,10 @@ set -o pipefail
 readonly PROGDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 function main() {
-  echo "annotate"
+  pushd "${PROGDIR}" > /dev/null
+    go build metadata.go
+    ./metadata "${@:-}"
+  popd > /dev/null
 }
 
 main "${@:-}"
