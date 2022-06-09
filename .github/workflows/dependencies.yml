@@ -96,22 +96,22 @@ jobs:
         id: tarball_name
         run: |
           echo "::set-output name=tarball_name::bundler-${{ matrix.version }}-${{ matrix.os }}.tgz"
-      - name: Compile '${{ steps.tarball-name.outputs.tarball_name }}'
+      - name: Compile '${{ steps.tarball_name.outputs.tarball_name }}'
         id: compile
         run: |
           pushd dependency > /dev/null
-            make compile version="${{ matrix.version }}" tarball_name="${{ steps.tarball-name.outputs.tarball_name }}"
+            make compile version="${{ matrix.version }}" tarball_name="${{ steps.tarball_name.outputs.tarball_name }}"
           popd > /dev/null
-      - name: Test '${{ steps.tarball-name.outputs.tarball_name }}'
+      - name: Test '${{ steps.tarball_name.outputs.tarball_name }}'
         run: |
           pushd dependency > /dev/null
-            make test version="${{ matrix.version }}" tarball_name="${{ steps.tarball-name.outputs.tarball_name }}" os="${{ matrix.os }}"
+            make test version="${{ matrix.version }}" tarball_name="${{ steps.tarball_name.outputs.tarball_name }}" os="${{ matrix.os }}"
           popd > /dev/null
       - name: Cache Tarball for ${{ matrix.version }}
         uses: actions/cache@v3
         with:
-          path: dependency/${{ steps.tarball-name.outputs.tarball_name }}
-          key: dependency/${{ steps.tarball-name.outputs.tarball_name }}
+          path: dependency/${{ steps.tarball_name.outputs.tarball_name }}
+          key: dependency/${{ steps.tarball_name.outputs.tarball_name }}
   create-pull-request:
     name: Create Pull Request
     needs:
