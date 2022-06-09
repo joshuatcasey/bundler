@@ -79,7 +79,7 @@ jobs:
             echo "::set-output name=cpe::$(jq -r .cpe <<< "${metadata}")"
             echo "::set-output name=purl::$(jq -r .purl <<< "${metadata}")"
             echo "::set-output name=licenses::$(jq -c .licenses <<< "${metadata}")"
-        popd > /dev/null
+          popd > /dev/null
       - name: Found ${{ steps.retrieve.outputs.new_versions }}
         run: echo ${{ steps.retrieve.outputs.new_versions }}
   compile:
