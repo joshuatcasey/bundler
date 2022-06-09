@@ -116,7 +116,11 @@ jobs:
   create-pull-request:
     name: Create Pull Request
     needs:
+      - retrieve
       - metadata
+    strategy:
+      matrix:
+        version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
