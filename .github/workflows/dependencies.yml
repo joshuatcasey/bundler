@@ -95,6 +95,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     steps:
+      - name: Check out code
+        if: steps.cache.outputs.cache-check != 'true'
+        uses: actions/checkout@v2
       - name: Setup tarball name
         id: tarball_name
         if: steps.cache.outputs.cache-check != 'true'
@@ -106,9 +109,6 @@ jobs:
         with:
           path: dependency/${{ steps.tarball_name.outputs.tarball_name }}
           key: dependency/${{ steps.tarball_name.outputs.tarball_name }}
-      - name: Check out code
-        if: steps.cache.outputs.cache-check != 'true'
-        uses: actions/checkout@v2
       - name: Prepare ${{ matrix.os }}
         if: steps.cache.outputs.cache-check != 'true'
         run: . dependency/prepare/${{ matrix.os }}
@@ -123,7 +123,7 @@ jobs:
         if: steps.cache.outputs.cache-check != 'true'
         run: |
           pushd dependency > /dev/null
-            make test version="${{ matrix.version }}" tarball_name="${{ steps.tarball_name.outputs.tarball_name }}" os="${{ matrix.os }}"
+            make test version="${{ matrix.version }}" tarball_name="${{ steps.tarball_name.outputs.tarball_name }}"
           popd > /dev/null
       - name: Cache Tarball 'dependency/${{ steps.tarball_name.outputs.tarball_name }}'
         if: steps.cache.outputs.cache-check != 'true'

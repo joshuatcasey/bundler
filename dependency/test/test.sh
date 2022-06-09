@@ -6,19 +6,19 @@ set -o pipefail
 readonly PROGDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 function hasParams() {
-    local tarball_name version
-    tarball_name="${1}"
-    version="${2}"
+  local tarball_name version
+  tarball_name="${1}"
+  version="${2}"
 
-    if [[ -z "${tarball_name}" ]]; then
-      echo " ⛔ specify tarball_name as the first parameter"
-      exit 1
-    fi
+  if [[ -z "${tarball_name}" ]]; then
+    echo " ⛔ specify tarball_name as the first parameter"
+    exit 1
+  fi
 
-    if [[ -z "${version}" ]]; then
-      echo " ⛔ specify tarball_name as the first parameter"
-      exit 1
-    fi
+  if [[ -z "${version}" ]]; then
+    echo " ⛔ specify tarball_name as the first parameter"
+    exit 1
+  fi
 }
 
 function itExists() {
@@ -68,10 +68,9 @@ function itHasTheRightShebang() {
 function itHasTheRightVersion() {
   echo -n "'bin/bundle -v' prints the right version"
 
-  local tarball_name version os full_tarball_name
+  local tarball_name version full_tarball_name
   tarball_name="${1}"
   version="${2}"
-#  os="${3}"
 
   full_tarball_name=$(realpath "${tarball_name}")
   temp_dir="$(mktemp -d)"
