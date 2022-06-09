@@ -55,10 +55,18 @@ jobs:
     outputs:
       metadata: ${{ steps.metadata.outputs.metadata }}
     steps:
+      - name: Check Cache Metadata for ${{ matrix.version }}
+        id: cache-check
+        uses: actions/cache@v3
+        with:
+          path: dependency/metadata-${{ matrix.version }}.json
+          key: metadata-${{ matrix.version }}.json
       - name: Check out code
+        if: steps.cache.outputs.cache-check != 'true'
         uses: actions/checkout@v2
       - name: Add Metadata for version
         id: metadata
+        if: steps.cache.outputs.cache-check != 'true'
         run: |
           set -euo pipefail
           pushd dependency > /dev/null
@@ -67,8 +75,10 @@ jobs:
             echo "::set-output name=metadata::${metadata}"
           popd > /dev/null
       - name: Found ${{ steps.metadata.outputs.metadata }}
+        if: steps.cache.outputs.cache-check != 'true'
         run: echo ${{ steps.metadata.outputs.metadata }}
       - name: Cache Metadata for ${{ matrix.version }}
+        if: steps.cache.outputs.cache-check != 'true'
         uses: actions/cache@v3
         with:
           path: dependency/metadata-${{ matrix.version }}.json
@@ -85,26 +95,38 @@ jobs:
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     steps:
+      - name: Check Cached Tarball for ${{ matrix.version }}
+        id: cache-check
+        uses: actions/cache@v3
+        with:
+          path: dependency/${{ steps.tarball_name.outputs.tarball_name }}
+          key: dependency/${{ steps.tarball_name.outputs.tarball_name }}
       - name: Check out code
+        if: steps.cache.outputs.cache-check != 'true'
         uses: actions/checkout@v2
       - name: Prepare ${{ matrix.os }}
+        if: steps.cache.outputs.cache-check != 'true'
         run: . dependency/prepare/${{ matrix.os }}
       - name: Setup tarball name
         id: tarball_name
+        if: steps.cache.outputs.cache-check != 'true'
         run: |
           echo "::set-output name=tarball_name::$(cat dependency/NAME)-${{ matrix.version }}-${{ matrix.os }}.tgz"
       - name: Compile '${{ steps.tarball_name.outputs.tarball_name }}'
+        if: steps.cache.outputs.cache-check != 'true'
         id: compile
         run: |
           pushd dependency > /dev/null
             make compile version="${{ matrix.version }}" tarball_name="${{ steps.tarball_name.outputs.tarball_name }}"
           popd > /dev/null
       - name: Test '${{ steps.tarball_name.outputs.tarball_name }}'
+        if: steps.cache.outputs.cache-check != 'true'
         run: |
           pushd dependency > /dev/null
             make test version="${{ matrix.version }}" tarball_name="${{ steps.tarball_name.outputs.tarball_name }}" os="${{ matrix.os }}"
           popd > /dev/null
       - name: Cache Tarball for ${{ matrix.version }}
+        if: steps.cache.outputs.cache-check != 'true'
         uses: actions/cache@v3
         with:
           path: dependency/${{ steps.tarball_name.outputs.tarball_name }}
