@@ -68,10 +68,10 @@ jobs:
           popd > /dev/null
       - name: Found ${{ steps.metadata.outputs.metadata }}
         run: echo ${{ steps.metadata.outputs.metadata }}
-      - name: Cache Metadata
+      - name: Cache Metadata for ${{ matrix.version }}
         uses: actions/cache@v3
         with:
-          path: metadata-${{ matrix.version }}.json
+          path: dependency/metadata-${{ matrix.version }}.json
           key: metadata-${{ matrix.version }}.json
   compile:
     name: Compile Bundler
@@ -119,7 +119,12 @@ jobs:
       - name: Retrieve Metadata for ${{ matrix.version }}
         uses: actions/cache@v3
         with:
-          path: metadata-${{ matrix.version }}.json
+          path: dependency/metadata-${{ matrix.version }}.json
           key: metadata-${{ matrix.version }}.json
       - name: Prints metadata-${{ matrix.version }}.json
-        run: cat metadata-${{ matrix.version }}.json
+        run: |
+          set +e
+          ls -lsa
+          ls -lsa dependency
+          cat metadata-${{ matrix.version }}.json
+          cat dependency/metadata-${{ matrix.version }}.json
