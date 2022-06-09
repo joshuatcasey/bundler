@@ -71,8 +71,7 @@ function itHasTheRightVersion() {
   local tarball_path version os full_tarball_path
   tarball_path="${1}"
   version="${2}"
-  os="${3}"
-  echo "OS=${os}"
+#  os="${3}"
 
   full_tarball_path=$(realpath "${tarball_path}")
   temp_dir="$(mktemp -d)"
