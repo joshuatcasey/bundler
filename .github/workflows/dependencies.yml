@@ -165,8 +165,4 @@ jobs:
           key: dependency/${{ steps.tarball_name.outputs.tarball_name }}
       - name: Describe dependency/${{ steps.tarball_name.outputs.tarball_name }}
         run: |
-          . dependency/prepare/${{ matrix.os }}
-          pushd dependency > /dev/null
-            ls -lsa ${{ steps.tarball_name.outputs.tarball_name }}
-            gensha256 ${{ steps.tarball_name.outputs.tarball_name }}
-          popd > /dev/null
+          ls -lsa dependency/${{ steps.tarball_name.outputs.tarball_name }}
