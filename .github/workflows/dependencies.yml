@@ -62,11 +62,11 @@ jobs:
           path: dependency/metadata-${{ matrix.version }}.json
           key: metadata-${{ matrix.version }}.json
       - name: Check out code
-        if: steps.cache-check.outputs.cache-hit != 'true'
+        if: ${{ steps.cache-check.outputs.cache-hit != 'true' }}
         uses: actions/checkout@v2
       - name: Add Metadata for version
         id: metadata
-        if: steps.cache-check.outputs.cache-hit != 'true'
+        if: ${{ steps.cache-check.outputs.cache-hit != 'true' }}
         run: |
           set -euo pipefail
           pushd dependency > /dev/null
@@ -75,10 +75,10 @@ jobs:
             echo "::set-output name=metadata::${metadata}"
           popd > /dev/null
       - name: Found ${{ steps.metadata.outputs.metadata }}
-        if: steps.cache-check.outputs.cache-hit != 'true'
+        if: ${{ steps.cache-check.outputs.cache-hit != 'true' }}
         run: echo ${{ steps.metadata.outputs.metadata }}
       - name: Cache Metadata for ${{ matrix.version }}
-        if: steps.cache-check.outputs.cache-hit != 'true'
+        if: ${{ steps.cache-check.outputs.cache-hit != 'true' }}
         uses: actions/cache@v3
         with:
           path: dependency/metadata-${{ matrix.version }}.json
@@ -108,28 +108,28 @@ jobs:
           path: dependency/${{ steps.tarball_name.outputs.tarball_name }}
           key: dependency/${{ steps.tarball_name.outputs.tarball_name }}
       - name: Prepare ${{ matrix.os }}
-        if: steps.cache-check.outputs.cache-hit != 'true'
+        if: ${{ steps.cache-check.outputs.cache-hit != 'true' }}
         run: . dependency/prepare/${{ matrix.os }}
       - name: Compile '${{ steps.tarball_name.outputs.tarball_name }}'
-        if: steps.cache-check.outputs.cache-hit != 'true'
+        if: ${{ steps.cache-check.outputs.cache-hit != 'true' }}
         id: compile
         run: |
           pushd dependency > /dev/null
             make compile version="${{ matrix.version }}" tarball_name="${{ steps.tarball_name.outputs.tarball_name }}"
           popd > /dev/null
       - name: Test '${{ steps.tarball_name.outputs.tarball_name }}'
-        if: steps.cache-check.outputs.cache-hit != 'true'
+        if: ${{ steps.cache-check.outputs.cache-hit != 'true' }}
         run: |
           pushd dependency > /dev/null
             make test version="${{ matrix.version }}" tarball_name="${{ steps.tarball_name.outputs.tarball_name }}"
           popd > /dev/null
       - name: Cache Tarball 'dependency/${{ steps.tarball_name.outputs.tarball_name }}'
-        if: steps.cache-check.outputs.cache-hit != 'true'
+        if: ${{ steps.cache-check.outputs.cache-hit != 'true' }}
         uses: actions/cache@v3
         with:
           path: dependency/${{ steps.tarball_name.outputs.tarball_name }}
           key: dependency/${{ steps.tarball_name.outputs.tarball_name }}
-  create-pull-request:
+  prepare-commit:
     name: Create Pull Request
     needs:
       - get_operating_systems
@@ -164,3 +164,25 @@ jobs:
       - name: Describe dependency/${{ steps.tarball_name.outputs.tarball_name }}
         run: |
           ls -lsa dependency/${{ steps.tarball_name.outputs.tarball_name }}
+      - name: Prepare Commit
+        run: |
+          pushd dependency > /dev/null
+            make prepare-commit metadataPath="../metadata-${{ matrix.version }}.json"
+          popd > /dev/null
+      - name: Show git diff
+        run: git diff
+      - name: Commit
+        id: commit
+        uses: paketo-buildpacks/github-config/actions/pull-request/create-commit@main
+        with:
+          message: "Updating dependencies in buildpack.toml"
+          pathspec: "."
+      - name: Push Branch
+        if: ${{ steps.commit.outputs.commit_sha != '' }}
+        uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
+        with:
+          branch: automation/dependencies/update
+      - name: PR Title
+        id: title
+        run: |
+          echo "::set-output name=include_versions:: with new dependency versions: ${{ matrix.version }}"
