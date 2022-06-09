@@ -96,19 +96,20 @@ jobs:
         id: compile
         run: |
           pushd dependency > /dev/null
-            make compile version="${{ matrix.version }}"
-            echo "::set-output name=tarball_path::bundler-${{ matrix.version }}-${{ matrix.os }}.tgz"
+            tarball_name="bundler-${{ matrix.version }}-${{ matrix.os }}.tgz"
+            make compile version="${{ matrix.version }}" tarball_name="${tarball_name}"
+            echo "::set-output name=tarball_name::${tarball_name}"
           popd > /dev/null
-      - name: Test ${{ matrix.version }}
+      - name: Test 'bundler-${{ matrix.version }}-${{ matrix.os }}.tgz'
         run: |
           pushd dependency > /dev/null
-            make test version="${{ matrix.version }}" tarball_path="${{ steps.compile.outputs.tarball_path }}" os="${{ matrix.os }}"
+            make test version="${{ matrix.version }}" tarball_name="${{ steps.compile.outputs.tarball_name }}" os="${{ matrix.os }}"
           popd > /dev/null
       - name: Cache Tarball for ${{ matrix.version }}
         uses: actions/cache@v3
         with:
-          path: dependency/${{ steps.compile.outputs.tarball_path }}
-          key: dependency/${{ steps.compile.outputs.tarball_path }}
+          path: dependency/${{ steps.compile.outputs.tarball_name }}
+          key: dependency/${{ steps.compile.outputs.tarball_name }}
   create-pull-request:
     name: Create Pull Request
     needs:

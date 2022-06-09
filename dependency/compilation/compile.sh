@@ -9,10 +9,10 @@ readonly NAME="bundler"
 function main() {
   local version tarball_name temp_dir output_dir
   version="${1}"
+  tarball_name="${2}"
 
   echo "version=${version}"
-
-  tarball_name="${NAME}-${version}.tgz"
+  echo "tarball_name=${tarball_name}"
 
   temp_dir="$(mktemp -d)"
   output_dir="$(pwd)"

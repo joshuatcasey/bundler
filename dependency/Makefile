@@ -1,10 +1,10 @@
 .PHONY: compile test retrieve metadata prepare
 
 compile:
-	@./compilation/compile.sh $(version)
+	@./compilation/compile.sh $(version) $(tarball_name)
 
 test:
-	@./test/test.sh $(tarball_path) $(version) $(os)
+	@./test/test.sh $(tarball_name) $(version) $(os)
 
 retrieve:
 	@./retrieval/retrieve.sh
