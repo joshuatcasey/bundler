@@ -200,7 +200,7 @@ jobs:
         id: commit
         uses: paketo-buildpacks/github-config/actions/pull-request/create-commit@main
         with:
-          message: "Updating dependencies in buildpack.toml"
+          message: "Updating dependencies in buildpack.toml with ${{ matrix.version }}-${{ matrix.os }}"
           pathspec: "."
       - name: Push Branch '${{ needs.get_branch_name.outputs.branch-name }}'
         uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
@@ -225,7 +225,7 @@ jobs:
       - name: Open Pull Request
         run: |
           gh pr create \
-            --title "Updates buildpack.toml with [${{ needs.retrieve.outputs.new_versions }}]" \
+            --title "Updates buildpack.toml with ${{ needs.retrieve.outputs.new_versions }}" \
             --body "See commit history for details" \
             --base main
         env:
