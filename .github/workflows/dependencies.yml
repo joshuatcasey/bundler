@@ -62,11 +62,11 @@ jobs:
           path: dependency/metadata-${{ matrix.version }}.json
           key: metadata-${{ matrix.version }}.json
       - name: Check out code
-        if: ${{ steps.cache-check.outputs.cache-hit != 'true' }}
+#        if: ${{ steps.cache-check.outputs.cache-hit != 'true' }}
         uses: actions/checkout@v2
       - name: Add Metadata for version
         id: metadata
-        if: ${{ steps.cache-check.outputs.cache-hit != 'true' }}
+#        if: ${{ steps.cache-check.outputs.cache-hit != 'true' }}
         run: |
           set -euo pipefail
           pushd dependency > /dev/null
@@ -75,10 +75,9 @@ jobs:
             echo "::set-output name=metadata::${metadata}"
           popd > /dev/null
       - name: Found ${{ steps.metadata.outputs.metadata }}
-        if: ${{ steps.cache-check.outputs.cache-hit != 'true' }}
-        run: echo ${{ steps.metadata.outputs.metadata }}
+        run: cat dependency/metadata-${{ matrix.version }}.json
       - name: Cache Metadata for ${{ matrix.version }}
-        if: ${{ steps.cache-check.outputs.cache-hit != 'true' }}
+#        if: ${{ steps.cache-check.outputs.cache-hit != 'true' }}
         uses: actions/cache@v3
         with:
           path: dependency/metadata-${{ matrix.version }}.json
