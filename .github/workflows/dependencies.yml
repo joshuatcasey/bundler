@@ -186,7 +186,9 @@ jobs:
             make prepare-commit \
               metadataPath="../metadata-${{ matrix.version }}.json" \
               tarballName="../${{ steps.tarball_name.outputs.tarball_name }}" \
-              id="$(cat NAME)"
+              id="$(cat NAME)" \
+              version="${{ matrix.version }}" \
+              os="${{ matrix.os }}"
           popd > /dev/null
       - name: Cleanup `metadata-${{ matrix.version }}.json'
         run: |

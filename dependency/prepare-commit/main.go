@@ -17,6 +17,8 @@ func main() {
 	metadataPath := os.Args[1]
 	tarballPath := os.Args[2]
 	id := os.Args[3]
+	version := os.Args[4]
+	targetOS := os.Args[5]
 
 	metadataContents, err := os.ReadFile(metadataPath)
 	if err != nil {
@@ -35,9 +37,9 @@ func main() {
 	}
 
 	metadata.ID = id
-	metadata.URI = "<COMING SOON>"
+	metadata.URI = fmt.Sprintf("%s-%s-%s.tgz", id, version, targetOS)
 	metadata.SHA256 = tarballChecksum
-	metadata.Stacks = []string{"<COMING SOON>"}
+	metadata.Stacks = []string{targetOS}
 	config.Metadata.Dependencies = append(config.Metadata.Dependencies, metadata)
 
 	file, err := os.OpenFile(buildpackTomlPath, os.O_RDWR|os.O_TRUNC, 0600)
