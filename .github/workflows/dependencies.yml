@@ -228,6 +228,16 @@ jobs:
           pushd dependency > /dev/null
             make prune
           popd > /dev/null
+      - name: Commit
+        id: commit
+        uses: paketo-buildpacks/github-config/actions/pull-request/create-commit@main
+        with:
+          message: "Pruning buildpack.toml"
+          pathspec: "."
+      - name: Push Branch '${{ needs.get_branch_name.outputs.branch-name }}'
+        uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
+        with:
+          branch: ${{ needs.get_branch_name.outputs.branch-name }}
   submit-pull-request:
     name: Submit Pull Request
     needs:
