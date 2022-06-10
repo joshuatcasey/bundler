@@ -132,7 +132,6 @@ jobs:
         os: ${{ fromJSON(needs.get_operating_systems.outputs.operating_systems) }}
         version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -144,16 +143,18 @@ jobs:
         id: tarball_name
         run: |
           echo "::set-output name=tarball_name::$(cat dependency/NAME)-${{ matrix.version }}-${{ matrix.os }}.tgz"
-      - uses: actions/download-artifact@v3
+      - name: Download 'metadata-${{ matrix.version }}.json'
+        uses: actions/download-artifact@v3
         with:
           name: metadata-${{ matrix.version }}.json
-          path: dependency/metadata-${{ matrix.version }}.json
+          path: dependency/
       - name: Print dependency/metadata-${{ matrix.version }}.json
         run: cat dependency/metadata-${{ matrix.version }}.json
-      - uses: actions/download-artifact@v3
+      - name: Download '${{ steps.tarball_name.outputs.tarball_name }}'
+        uses: actions/download-artifact@v3
         with:
           name: ${{ steps.tarball_name.outputs.tarball_name }}
-          path: dependency/${{ steps.tarball_name.outputs.tarball_name }}
+          path: dependency/
       - name: Describe dependency/${{ steps.tarball_name.outputs.tarball_name }}
         run: |
           ls -lsa dependency/${{ steps.tarball_name.outputs.tarball_name }}
