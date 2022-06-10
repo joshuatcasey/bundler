@@ -101,6 +101,8 @@ func getRubyGemVersions() []PrettyBundlerRelease {
 			continue
 		}
 
+		pretty.SHA = br.SHA
+
 		rubyGemVersions = append(rubyGemVersions, pretty)
 	}
 
