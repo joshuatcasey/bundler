@@ -208,12 +208,29 @@ jobs:
         uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
         with:
           branch: ${{ needs.get_branch_name.outputs.branch-name }}
+  prune:
+    name: Prune old versions
+    needs:
+      - get_branch_name
+      - prepare-commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.get_branch_name.outputs.branch-name }}
+      - name: Prune
+        run: |
+          pushd dependency > /dev/null
+            make prune
+          popd > /dev/null
   submit-pull-request:
     name: Submit Pull Request
     needs:
       - get_branch_name
       - retrieve
       - prepare-commits
+      - prune
     runs-on: ubuntu-latest
     steps:
       - name: Check out code

@@ -54,7 +54,6 @@ func main() {
 	}
 
 	fmt.Println("Updating buildpack.toml with new version: ", metadata.Version)
-
 }
 
 func parseBuildpackToml(buildpackTomlPath string) cargo.Config {

@@ -1,4 +1,4 @@
-.PHONY: compile test retrieve metadata prepare-commit
+.PHONY: compile test retrieve metadata prepare-commit prune
 
 compile:
 	@./compilation/compile.sh $(version) $(tarball_name)
@@ -14,3 +14,6 @@ metadata:
 
 prepare-commit:
 	@./prepare-commit/prepare-commit.sh $(metadataPath) $(tarballName) $(id) $(version) $(os)
+
+prune:
+	@./prune/prune.sh
