@@ -6,12 +6,22 @@ on:
     - cron: '0 */12 * * *'  # https://crontab.guru/every-12-hours
 
 jobs:
+  get_branch_name:
+    name: Get Branch Name
+    runs-on: ubuntu-latest
+    outputs:
+      branch-name: ${{ steps.setup-branch-name.outputs.branch-name }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Setup branch name
+        id: setup-branch-name
+        run: echo "::set-output name=branch-name::automation/dependencies/bump-$(git rev-parse --short HEAD)-$(date +%s)"
   get_operating_systems:
     name: Get Operating Systems
     runs-on: ubuntu-latest
     outputs:
       operating_systems: ${{ steps.get_operating_systems.outputs.operating_systems }}
-      branch-name: ${{ steps.setup-branch-name.outputs.branch-name }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -23,9 +33,6 @@ jobs:
           echo "::set-output name=operating_systems::${operatingSystems}"
       - name: Found ${{ steps.get_operating_systems.outputs.operating_systems }}
         run: echo ${{ steps.get_operating_systems.outputs.operating_systems }}
-      - name: Setup branch name
-        id: setup-branch-name
-        run: echo "::set-output name=branch-name::automation/dependencies/bump-$(git rev-parse --short HEAD)-$(date +%s)"
   retrieve:
     name: Retrieve new versions
     runs-on: ubuntu-latest
@@ -132,9 +139,10 @@ jobs:
         with:
           path: dependency/${{ steps.tarball_name.outputs.tarball_name }}
           key: dependency/${{ steps.tarball_name.outputs.tarball_name }}
-  prepare-commit:
-    name: Create Pull Request
+  prepare-commits:
+    name: Prepare Commits
     needs:
+      - get_branch_name
       - get_operating_systems
       - retrieve
       - metadata
@@ -149,10 +157,10 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Checkout Branch
+      - name: Checkout Branch '${{ needs.get_branch_name.outputs.branch-name }}'
         uses: paketo-buildpacks/github-config/actions/pull-request/checkout-branch@main
         with:
-          branch: ${{ needs.get_operating_systems.outputs.branch-name }}
+          branch: ${{ needs.get_branch_name.outputs.branch-name }}
       - name: Setup tarball name
         id: tarball_name
         run: |
@@ -180,6 +188,12 @@ jobs:
               tarballName="../${{ steps.tarball_name.outputs.tarball_name }}" \
               id="$(cat NAME)"
           popd > /dev/null
+      - name: Cleanup `metadata-${{ matrix.version }}.json'
+        run: |
+          rm dependency/metadata-${{ matrix.version }}.json
+      - name: Cleanup `${{ steps.tarball_name.outputs.tarball_name }}'
+        run: |
+          rm dependency/${{ steps.tarball_name.outputs.tarball_name }}
       - name: Show git diff
         run: git diff
       - name: Commit
@@ -188,11 +202,31 @@ jobs:
         with:
           message: "Updating dependencies in buildpack.toml"
           pathspec: "."
-      - name: Push Branch
+      - name: Push Branch '${{ needs.get_branch_name.outputs.branch-name }}'
         uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
         with:
-          branch: ${{ needs.get_operating_systems.outputs.branch-name }}
-#      - name: PR Title
-#        id: title
-#        run: |
-#          echo "::set-output name=include_versions:: with new dependency versions: ${{ matrix.version }}"
+          branch: ${{ needs.get_branch_name.outputs.branch-name }}
+  submit-pull-request:
+    name: Submit Pull Request
+    needs:
+      - get_branch_name
+      - retrieve
+      - prepare-commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.get_branch_name.outputs.branch-name }}
+      - name: PR Title
+        id: title
+        run: |
+          echo "::set-output name=include_versions:: with new dependency versions: ${{ matrix.version }}"
+      - name: Open Pull Request
+        run: |
+          gh pr create \
+            --title "Updates buildpack.toml with [${{ needs.retrieve.outputs.new_versions }}]" \
+            --body "See commit history for details" \
+            --base main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
