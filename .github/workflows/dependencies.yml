@@ -79,7 +79,8 @@ jobs:
           popd > /dev/null
       - name: Found ${{ steps.metadata.outputs.metadata }}
         run: cat dependency/metadata-${{ matrix.version }}.json
-      - uses: actions/upload-artifact@v3
+      - name: Upload 'metadata-${{ matrix.version }}.json'
+        uses: actions/upload-artifact@v3
         with:
           name: metadata-${{ matrix.version }}.json
           path: dependency/metadata-${{ matrix.version }}.json
@@ -101,7 +102,7 @@ jobs:
         id: tarball_name
         run: |
           echo "::set-output name=tarball_name::$(cat dependency/NAME)-${{ matrix.version }}-${{ matrix.os }}.tgz"
-      - name: Prepare ${{ matrix.os }}
+      - name: Prepare '${{ matrix.os }}'
         run: . dependency/prepare/${{ matrix.os }}
       - name: Compile '${{ steps.tarball_name.outputs.tarball_name }}'
         id: compile
@@ -114,7 +115,8 @@ jobs:
           pushd dependency > /dev/null
             make test version="${{ matrix.version }}" tarball_name="${{ steps.tarball_name.outputs.tarball_name }}"
           popd > /dev/null
-      - uses: actions/upload-artifact@v3
+      - name: Upload '${{ steps.tarball_name.outputs.tarball_name }}'
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.tarball_name.outputs.tarball_name }}
           path: dependency/${{ steps.tarball_name.outputs.tarball_name }}
