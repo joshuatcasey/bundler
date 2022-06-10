@@ -122,7 +122,6 @@ jobs:
     name: Prepare Commits
     needs:
       - compile
-    strategy:
     runs-on: ubuntu-latest
     steps:
       - name: Get all artifacts
