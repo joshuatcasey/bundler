@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/paketo-buildpacks/packit/v2/cargo"
+	"github.com/paketo-buildpacks/packit/v2/fs"
 )
 
 func main() {
@@ -14,7 +15,15 @@ func main() {
 	config := parseBuildpackToml(buildpackTomlPath)
 
 	metadataPath := os.Args[1]
+	tarballPath := os.Args[2]
+	id := os.Args[3]
+
 	metadataContents, err := os.ReadFile(metadataPath)
+	if err != nil {
+		panic(err)
+	}
+
+	tarballChecksum, err := fs.NewChecksumCalculator().Sum(tarballPath)
 	if err != nil {
 		panic(err)
 	}
@@ -25,6 +34,10 @@ func main() {
 		panic(fmt.Errorf("failed to parse metadata file: %w", err))
 	}
 
+	metadata.ID = id
+	metadata.URI = "<COMING SOON>"
+	metadata.SHA256 = tarballChecksum
+	metadata.Stacks = []string{"<COMING SOON>"}
 	config.Metadata.Dependencies = append(config.Metadata.Dependencies, metadata)
 
 	file, err := os.OpenFile(buildpackTomlPath, os.O_RDWR|os.O_TRUNC, 0600)

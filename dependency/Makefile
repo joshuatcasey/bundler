@@ -13,4 +13,4 @@ metadata:
 	@./metadata/metadata.sh $(version)
 
 prepare-commit:
-	@./prepare-commit/prepare-commit.sh $(metadataPath)
+	@./prepare-commit/prepare-commit.sh $(metadataPath) $(tarballName) $(id)

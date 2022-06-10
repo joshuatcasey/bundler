@@ -167,7 +167,10 @@ jobs:
       - name: Prepare Commit
         run: |
           pushd dependency > /dev/null
-            make prepare-commit metadataPath="../metadata-${{ matrix.version }}.json"
+            make prepare-commit \
+              metadataPath="../metadata-${{ matrix.version }}.json" \
+              tarballName="../${{ steps.tarball_name.outputs.tarball_name }}" \
+              id="$(cat NAME)"
           popd > /dev/null
       - name: Show git diff
         run: git diff
@@ -177,12 +180,12 @@ jobs:
         with:
           message: "Updating dependencies in buildpack.toml"
           pathspec: "."
-      - name: Push Branch
-        if: ${{ steps.commit.outputs.commit_sha != '' }}
-        uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
-        with:
-          branch: automation/dependencies/update
-      - name: PR Title
-        id: title
-        run: |
-          echo "::set-output name=include_versions:: with new dependency versions: ${{ matrix.version }}"
+#      - name: Push Branch
+#        if: ${{ steps.commit.outputs.commit_sha != '' }}
+#        uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
+#        with:
+#          branch: automation/dependencies/update
+#      - name: PR Title
+#        id: title
+#        run: |
+#          echo "::set-output name=include_versions:: with new dependency versions: ${{ matrix.version }}"
