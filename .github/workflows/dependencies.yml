@@ -121,7 +121,7 @@ jobs:
           name: ${{ steps.tarball_name.outputs.tarball_name }}
           path: dependency/${{ steps.tarball_name.outputs.tarball_name }}
   list-all-artifacts:
-    name: Prepare Commits
+    name: List All Artifacts
     needs:
       - compile
     runs-on: ubuntu-latest
