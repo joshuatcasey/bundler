@@ -44,6 +44,18 @@ api = "0.7"
     uri = "https://deps.paketo.io/bundler/bundler_2.3.14_linux_noarch_bionic_de0087f2.tgz"
     version = "2.3.14"
 
+  [[metadata.dependencies]]
+    cpe = "cpe:2.3:a:bundler:bundler:2.3.13:*:*:*:*:ruby:*:*"
+    id = "bundler"
+    licenses = ["MIT", "MIT-0"]
+    purl = "pkg:generic/bundler@2.3.13?checksum=7ec5e5caa8d21f7af9c106bd9091a96fa9f32104ecfc0b5f50ff25edf8a42dfd&download_url=https://rubygems.org/downloads/bundler-2.3.13.gem"
+    sha256 = "05a6bc1aeb2363c4b5c3b8e885dccf0969d90bea0cc994da9bd30d2e1adfa04e"
+    source = "https://rubygems.org/downloads/bundler-2.3.13.gem"
+    source_sha256 = "7ec5e5caa8d21f7af9c106bd9091a96fa9f32104ecfc0b5f50ff25edf8a42dfd"
+    stacks = ["ubuntu-18.04"]
+    uri = "bundler-2.3.13-ubuntu-18.04.tgz"
+    version = "2.3.13"
+
   [[metadata.dependency-constraints]]
     constraint = "1.*.*"
     id = "bundler"
