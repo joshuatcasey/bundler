@@ -259,7 +259,8 @@ jobs:
   assemble:
     name: Assemble Metadata information
     needs:
-      - prepare-commits
+      - metadata
+      - compile
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -280,4 +281,3 @@ jobs:
           pushd libdependency > /dev/null
             make assemble artifactPath=${{ steps.setup-temp-dir.outputs.artifactPath }}
           popd > /dev/null
-
