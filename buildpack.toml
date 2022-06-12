@@ -19,17 +19,40 @@ api = "0.7"
     bundler = "2.x.x"
 
   [[metadata.dependencies]]
-    cpe = "cpe:2.3:a:bundler:bundler:1.17.3:*:*:*:*:ruby:*:*"
+    cpe = "cpe:2.3:a:bundler:bundler:2.3.15:*:*:*:*:ruby:*:*"
     id = "bundler"
     licenses = ["MIT", "MIT-0"]
-    name = "Bundler"
-    purl = "pkg:generic/bundler@1.17.3?checksum=bc4bf75b548b27451aa9f443b18c46a739dd22ad79f7a5f90b485376a67dc352&download_url=https://rubygems.org/downloads/bundler-1.17.3.gem"
-    sha256 = "dc89db5382e681b4c03b48dae8be4238b077a45e52488233ab01c0e93b913dc7"
-    source = "https://rubygems.org/downloads/bundler-1.17.3.gem"
-    source_sha256 = "bc4bf75b548b27451aa9f443b18c46a739dd22ad79f7a5f90b485376a67dc352"
-    stacks = ["io.buildpacks.stacks.bionic"]
-    uri = "file:///Users/caseyj/git/paketo-buildpacks/bundler/dependency/bundler-1.17.3.tgz"
-    version = "1.17.3"
+    purl = "pkg:generic/bundler@2.3.15?checksum=05b7a8a409982c5d336371dee433e905ff708596f332e5ef0379559b6968431d&download_url=https://rubygems.org/downloads/bundler-2.3.15.gem"
+    sha256 = "6e7423e8d763e3f0c5326d155f80f45b180a4382db8af3d3802e913beffe9b38"
+    source = "https://rubygems.org/downloads/bundler-2.3.15.gem"
+    source_sha256 = "05b7a8a409982c5d336371dee433e905ff708596f332e5ef0379559b6968431d"
+    stacks = ["macos-latest"]
+    uri = "bundler-2.3.15-macos-latest.tgz"
+    version = "2.3.15"
+
+  [[metadata.dependencies]]
+    cpe = "cpe:2.3:a:bundler:bundler:2.3.15:*:*:*:*:ruby:*:*"
+    id = "bundler"
+    licenses = ["MIT", "MIT-0"]
+    purl = "pkg:generic/bundler@2.3.15?checksum=05b7a8a409982c5d336371dee433e905ff708596f332e5ef0379559b6968431d&download_url=https://rubygems.org/downloads/bundler-2.3.15.gem"
+    sha256 = "cfd6b84c864d41efd39fa77d31198dfdaf34404069083c941761a41386b14d25"
+    source = "https://rubygems.org/downloads/bundler-2.3.15.gem"
+    source_sha256 = "05b7a8a409982c5d336371dee433e905ff708596f332e5ef0379559b6968431d"
+    stacks = ["ubuntu-18.04"]
+    uri = "bundler-2.3.15-ubuntu-18.04.tgz"
+    version = "2.3.15"
+
+  [[metadata.dependencies]]
+    cpe = "cpe:2.3:a:bundler:bundler:2.3.15:*:*:*:*:ruby:*:*"
+    id = "bundler"
+    licenses = ["MIT", "MIT-0"]
+    purl = "pkg:generic/bundler@2.3.15?checksum=05b7a8a409982c5d336371dee433e905ff708596f332e5ef0379559b6968431d&download_url=https://rubygems.org/downloads/bundler-2.3.15.gem"
+    sha256 = "07775d6959e35a7cb897ffc9958ab34de10716a7d9ed5b619a6ed2771ba5f546"
+    source = "https://rubygems.org/downloads/bundler-2.3.15.gem"
+    source_sha256 = "05b7a8a409982c5d336371dee433e905ff708596f332e5ef0379559b6968431d"
+    stacks = ["ubuntu-22.04"]
+    uri = "bundler-2.3.15-ubuntu-22.04.tgz"
+    version = "2.3.15"
 
   [[metadata.dependencies]]
     cpe = "cpe:2.3:a:bundler:bundler:2.3.14:*:*:*:*:ruby:*:*"
@@ -49,24 +72,24 @@ api = "0.7"
     id = "bundler"
     licenses = ["MIT", "MIT-0"]
     purl = "pkg:generic/bundler@2.3.13?checksum=7ec5e5caa8d21f7af9c106bd9091a96fa9f32104ecfc0b5f50ff25edf8a42dfd&download_url=https://rubygems.org/downloads/bundler-2.3.13.gem"
+    sha256 = "a05f3279fe9f4f179ff8b6ae5f9e4f2e62ebe7e58b481aac1619a3ad375bd225"
+    source = "https://rubygems.org/downloads/bundler-2.3.13.gem"
+    source_sha256 = "7ec5e5caa8d21f7af9c106bd9091a96fa9f32104ecfc0b5f50ff25edf8a42dfd"
+    stacks = ["macos-latest"]
+    uri = "bundler-2.3.13-macos-latest.tgz"
+    version = "2.3.13"
+
+  [[metadata.dependencies]]
+    cpe = "cpe:2.3:a:bundler:bundler:2.3.13:*:*:*:*:ruby:*:*"
+    id = "bundler"
+    licenses = ["MIT", "MIT-0"]
+    purl = "pkg:generic/bundler@2.3.13?checksum=7ec5e5caa8d21f7af9c106bd9091a96fa9f32104ecfc0b5f50ff25edf8a42dfd&download_url=https://rubygems.org/downloads/bundler-2.3.13.gem"
     sha256 = "7b64860de04a23ffc2f8b7539bf22c555d1c6465750b451a72109e3f5e84f7e1"
     source = "https://rubygems.org/downloads/bundler-2.3.13.gem"
     source_sha256 = "7ec5e5caa8d21f7af9c106bd9091a96fa9f32104ecfc0b5f50ff25edf8a42dfd"
     stacks = ["ubuntu-18.04"]
     uri = "bundler-2.3.13-ubuntu-18.04.tgz"
     version = "2.3.13"
-
-  [[metadata.dependencies]]
-    cpe = "cpe:2.3:a:bundler:bundler:2.3.15:*:*:*:*:ruby:*:*"
-    id = "bundler"
-    licenses = ["MIT", "MIT-0"]
-    purl = "pkg:generic/bundler@2.3.15?checksum=05b7a8a409982c5d336371dee433e905ff708596f332e5ef0379559b6968431d&download_url=https://rubygems.org/downloads/bundler-2.3.15.gem"
-    sha256 = "cfd6b84c864d41efd39fa77d31198dfdaf34404069083c941761a41386b14d25"
-    source = "https://rubygems.org/downloads/bundler-2.3.15.gem"
-    source_sha256 = "05b7a8a409982c5d336371dee433e905ff708596f332e5ef0379559b6968431d"
-    stacks = ["ubuntu-18.04"]
-    uri = "bundler-2.3.15-ubuntu-18.04.tgz"
-    version = "2.3.15"
 
   [[metadata.dependencies]]
     cpe = "cpe:2.3:a:bundler:bundler:2.3.13:*:*:*:*:ruby:*:*"
@@ -81,40 +104,17 @@ api = "0.7"
     version = "2.3.13"
 
   [[metadata.dependencies]]
-    cpe = "cpe:2.3:a:bundler:bundler:2.3.15:*:*:*:*:ruby:*:*"
+    cpe = "cpe:2.3:a:bundler:bundler:1.17.3:*:*:*:*:ruby:*:*"
     id = "bundler"
     licenses = ["MIT", "MIT-0"]
-    purl = "pkg:generic/bundler@2.3.15?checksum=05b7a8a409982c5d336371dee433e905ff708596f332e5ef0379559b6968431d&download_url=https://rubygems.org/downloads/bundler-2.3.15.gem"
-    sha256 = "07775d6959e35a7cb897ffc9958ab34de10716a7d9ed5b619a6ed2771ba5f546"
-    source = "https://rubygems.org/downloads/bundler-2.3.15.gem"
-    source_sha256 = "05b7a8a409982c5d336371dee433e905ff708596f332e5ef0379559b6968431d"
-    stacks = ["ubuntu-22.04"]
-    uri = "bundler-2.3.15-ubuntu-22.04.tgz"
-    version = "2.3.15"
-
-  [[metadata.dependencies]]
-    cpe = "cpe:2.3:a:bundler:bundler:2.3.13:*:*:*:*:ruby:*:*"
-    id = "bundler"
-    licenses = ["MIT", "MIT-0"]
-    purl = "pkg:generic/bundler@2.3.13?checksum=7ec5e5caa8d21f7af9c106bd9091a96fa9f32104ecfc0b5f50ff25edf8a42dfd&download_url=https://rubygems.org/downloads/bundler-2.3.13.gem"
-    sha256 = "a05f3279fe9f4f179ff8b6ae5f9e4f2e62ebe7e58b481aac1619a3ad375bd225"
-    source = "https://rubygems.org/downloads/bundler-2.3.13.gem"
-    source_sha256 = "7ec5e5caa8d21f7af9c106bd9091a96fa9f32104ecfc0b5f50ff25edf8a42dfd"
-    stacks = ["macos-latest"]
-    uri = "bundler-2.3.13-macos-latest.tgz"
-    version = "2.3.13"
-
-  [[metadata.dependencies]]
-    cpe = "cpe:2.3:a:bundler:bundler:2.3.15:*:*:*:*:ruby:*:*"
-    id = "bundler"
-    licenses = ["MIT", "MIT-0"]
-    purl = "pkg:generic/bundler@2.3.15?checksum=05b7a8a409982c5d336371dee433e905ff708596f332e5ef0379559b6968431d&download_url=https://rubygems.org/downloads/bundler-2.3.15.gem"
-    sha256 = "6e7423e8d763e3f0c5326d155f80f45b180a4382db8af3d3802e913beffe9b38"
-    source = "https://rubygems.org/downloads/bundler-2.3.15.gem"
-    source_sha256 = "05b7a8a409982c5d336371dee433e905ff708596f332e5ef0379559b6968431d"
-    stacks = ["macos-latest"]
-    uri = "bundler-2.3.15-macos-latest.tgz"
-    version = "2.3.15"
+    name = "Bundler"
+    purl = "pkg:generic/bundler@1.17.3?checksum=bc4bf75b548b27451aa9f443b18c46a739dd22ad79f7a5f90b485376a67dc352&download_url=https://rubygems.org/downloads/bundler-1.17.3.gem"
+    sha256 = "dc89db5382e681b4c03b48dae8be4238b077a45e52488233ab01c0e93b913dc7"
+    source = "https://rubygems.org/downloads/bundler-1.17.3.gem"
+    source_sha256 = "bc4bf75b548b27451aa9f443b18c46a739dd22ad79f7a5f90b485376a67dc352"
+    stacks = ["io.buildpacks.stacks.bionic"]
+    uri = "file:///Users/caseyj/git/paketo-buildpacks/bundler/dependency/bundler-1.17.3.tgz"
+    version = "1.17.3"
 
   [[metadata.dependency-constraints]]
     constraint = "1.*.*"
