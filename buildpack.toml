@@ -80,6 +80,18 @@ api = "0.7"
     uri = "bundler-2.3.13-ubuntu-22.04.tgz"
     version = "2.3.13"
 
+  [[metadata.dependencies]]
+    cpe = "cpe:2.3:a:bundler:bundler:2.3.15:*:*:*:*:ruby:*:*"
+    id = "bundler"
+    licenses = ["MIT", "MIT-0"]
+    purl = "pkg:generic/bundler@2.3.15?checksum=05b7a8a409982c5d336371dee433e905ff708596f332e5ef0379559b6968431d&download_url=https://rubygems.org/downloads/bundler-2.3.15.gem"
+    sha256 = "b1ae41fe994410928f039c7e18756549c5763b93c0981aed1e859618b18d6e64"
+    source = "https://rubygems.org/downloads/bundler-2.3.15.gem"
+    source_sha256 = "05b7a8a409982c5d336371dee433e905ff708596f332e5ef0379559b6968431d"
+    stacks = ["ubuntu-22.04"]
+    uri = "bundler-2.3.15-ubuntu-22.04.tgz"
+    version = "2.3.15"
+
   [[metadata.dependency-constraints]]
     constraint = "1.*.*"
     id = "bundler"
