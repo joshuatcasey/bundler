@@ -174,7 +174,7 @@ jobs:
           ls -lsa dependency/${{ steps.tarball_name.outputs.tarball_name }}
       - name: Prepare Commit
         run: |
-          pushd dependency > /dev/null
+          pushd libdependency > /dev/null
             make prepare-commit \
               metadataPath="../metadata-${{ matrix.version }}.json" \
               tarballName="../${{ steps.tarball_name.outputs.tarball_name }}" \
@@ -217,7 +217,7 @@ jobs:
           ref: ${{ needs.get_branch_name.outputs.branch-name }}
       - name: Prune
         run: |
-          pushd dependency > /dev/null
+          pushd libdependency > /dev/null
             make prune
           popd > /dev/null
       - name: Commit
@@ -255,3 +255,28 @@ jobs:
             --base main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  assemble:
+    name: Assemble Metadata information
+    needs:
+      - prepare-commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.get_branch_name.outputs.branch-name }}
+      - name: Setup temp dir
+        id: setup-temp-dir
+        run: |
+          TEMPDIR=$(mktemp -d)
+          run: echo "::set-output name=artifactPath::${TEMPDIR}"
+      - name: Get all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: ${{ steps.setup-temp-dir.outputs.artifactPath }}
+      - name: Run assemble
+        run: |
+          pushd libdependency > /dev/null
+            make assemble artifactPath=${{ steps.setup-temp-dir.outputs.artifactPath }}
+          popd > /dev/null
+
