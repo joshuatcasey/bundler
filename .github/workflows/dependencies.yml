@@ -174,11 +174,12 @@ jobs:
           ls -lsa dependency/${{ steps.tarball_name.outputs.tarball_name }}
       - name: Prepare Commit
         run: |
+          id=$(cat dependency/NAME)
           pushd libdependency > /dev/null
             make prepare-commit \
               metadataPath="../metadata-${{ matrix.version }}.json" \
               tarballName="../${{ steps.tarball_name.outputs.tarball_name }}" \
-              id="$(cat NAME)" \
+              id="${id}" \
               version="${{ matrix.version }}" \
               os="${{ matrix.os }}"
           popd > /dev/null
