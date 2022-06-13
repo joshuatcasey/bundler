@@ -11,10 +11,10 @@ import (
 )
 
 type Artifact struct {
-	tarballPath   string
-	uri           string
-	tarballSHA256 string
-	os            string
+	TarballPath   string
+	Uri           string
+	TarballSHA256 string
+	Os            string
 	version       string
 }
 
@@ -79,14 +79,14 @@ func findArtifacts(artifactPath string, id string) []Artifact {
 			}
 
 			artifact := Artifact{
-				uri: "<UNKNOWN>",
+				Uri: "<UNKNOWN>",
 			}
 			for _, file := range files {
 				fullpath := filepath.Join(tarball, file.Name())
 				fmt.Printf("  - %s\n", file.Name())
 
 				if isTarball(file) {
-					artifact.tarballPath = fullpath
+					artifact.TarballPath = fullpath
 					continue
 				}
 
@@ -96,21 +96,21 @@ func findArtifacts(artifactPath string, id string) []Artifact {
 				}
 
 				if isOS(file) {
-					artifact.os = string(bytes)
+					artifact.Os = string(bytes)
 				} else if isVersion(file) {
 					artifact.version = string(bytes)
 				} else if isSHA256(file) {
-					artifact.tarballSHA256 = string(bytes)
+					artifact.TarballSHA256 = string(bytes)
 				}
 			}
 
-			calculatedSHA256, err := fs.NewChecksumCalculator().Sum(artifact.tarballPath)
+			calculatedSHA256, err := fs.NewChecksumCalculator().Sum(artifact.TarballPath)
 			calculatedSHA256 = calculatedSHA256[:64]
-			if !strings.HasPrefix(artifact.tarballSHA256, calculatedSHA256) {
-				fmt.Printf("SHA256 does not match! Expected=%s, Calculated=%s\n", artifact.tarballSHA256, calculatedSHA256)
+			if !strings.HasPrefix(artifact.TarballSHA256, calculatedSHA256) {
+				fmt.Printf("SHA256 does not match! Expected=%s, Calculated=%s\n", artifact.TarballSHA256, calculatedSHA256)
 				panic("SHA256 does not match!")
 			}
-			artifact.tarballSHA256 = calculatedSHA256
+			artifact.TarballSHA256 = calculatedSHA256
 
 			if err != nil {
 				panic(err)
