@@ -112,7 +112,7 @@ jobs:
       - name: Setup tarball name
         id: tarball_name
         run: |
-          echo "::set-output name=tarball_name::$(cat dependency/ID)-${{ matrix.version }}-${{ matrix.os }}.tgz"
+          echo "::set-output name=tarball_name::$(cat dependency/ID)-${{ matrix.version }}-${{ matrix.os }}"
       - name: Prepare '${{ matrix.os }}'
         run: . dependency/prepare/${{ matrix.os }}
       - name: Compile '${{ steps.tarball_name.outputs.tarball_name }}'
@@ -121,20 +121,20 @@ jobs:
           pushd dependency > /dev/null
             make compile \
               version="${{ matrix.version }}" \
-              tarball_name="${{ steps.tarball_name.outputs.tarball_name }}"
+              tarball_name="${{ steps.tarball_name.outputs.tarball_name }}.tgz"
           popd > /dev/null
       - name: Test '${{ steps.tarball_name.outputs.tarball_name }}'
         run: |
           pushd dependency > /dev/null
             make test \
               version="${{ matrix.version }}" \
-              tarball_name="${{ steps.tarball_name.outputs.tarball_name }}"
+              tarball_name="${{ steps.tarball_name.outputs.tarball_name }}.tgz"
           popd > /dev/null
       - name: Upload '${{ steps.tarball_name.outputs.tarball_name }}'
         uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.tarball_name.outputs.tarball_name }}
-          path: 'dependency/${{ steps.tarball_name.outputs.tarball_name }}*'
+          path: 'dependency/${{ steps.tarball_name.outputs.tarball_name }}.tgz*'
   list-all-artifacts:
     name: List All Artifacts
     needs:
