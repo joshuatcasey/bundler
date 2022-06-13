@@ -39,11 +39,25 @@ func main() {
 	if tarballs, err := filepath.Glob(tarballGlob); err != nil {
 		panic(err)
 	} else if len(tarballs) < 1 {
-		panic(fmt.Errorf("no tarball files found: %s", tarballGlob))
+		panic(fmt.Errorf("no compiled artifact folders found: %s", tarballGlob))
 	} else {
-		fmt.Printf("Found tarball files:\n")
+		fmt.Printf("Found compiled artifact folders:\n")
 		for _, tarball := range tarballs {
 			fmt.Printf("- %s\n", filepath.Base(tarball))
+
+			file, err := os.Open(filepath.Join(artifactPath, tarball))
+			if err != nil {
+				panic(err)
+			}
+
+			files, err := file.Readdir(0)
+			if err != nil {
+				panic(err)
+			}
+
+			for _, v := range files {
+				fmt.Printf("  - %s, isDir=%t", v.Name(), v.IsDir())
+			}
 		}
 	}
 }
