@@ -55,7 +55,7 @@ func getMetadata(artifactPath string) map[string]common.DepVersion {
 		for _, metadata := range metadataFiles {
 			fmt.Printf("- %s\n", filepath.Base(metadata))
 
-			version := strings.TrimPrefix(metadata, "metadata-")
+			version := strings.TrimPrefix(filepath.Base(metadata), "metadata-")
 			version = strings.TrimSuffix(version, ".json")
 
 			var depVersion common.DepVersion
