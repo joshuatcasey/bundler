@@ -26,8 +26,6 @@ func main() {
 	fmt.Printf("id=%s\n", id)
 	fmt.Printf("artifactPath=%s\n", artifactPath)
 
-	var thing common.DepVersion
-
 	if exists, err := fs.Exists(artifactPath); err != nil {
 		panic(err)
 	} else if !exists {
@@ -36,6 +34,17 @@ func main() {
 		panic(fmt.Errorf("directory %s is empty", artifactPath))
 	}
 
+	versionToMetadata := getMetadata(artifactPath)
+	fmt.Println("Found metadata:")
+	printAsJson(versionToMetadata)
+
+	artifacts := findArtifacts(artifactPath, id)
+	fmt.Println("Found artifacts:")
+	printAsJson(artifacts)
+}
+
+func getMetadata(artifactPath string) map[string]common.DepVersion {
+	versionToMetadata := make(map[string]common.DepVersion)
 	metadataGlob := filepath.Join(artifactPath, "metadata-*.json")
 	if metadataFiles, err := filepath.Glob(metadataGlob); err != nil {
 		panic(err)
@@ -45,16 +54,33 @@ func main() {
 		fmt.Printf("Found metadata files:\n")
 		for _, metadata := range metadataFiles {
 			fmt.Printf("- %s\n", filepath.Base(metadata))
+
+			version := strings.TrimPrefix(metadata, "metadata-")
+			version = strings.TrimSuffix(version, ".json")
+
+			var depVersion common.DepVersion
+
+			metadataContents, err := os.ReadFile(metadata)
+			if err != nil {
+				panic(err)
+			}
+
+			err = json.Unmarshal(metadataContents, &depVersion)
+			if err != nil {
+				panic(fmt.Errorf("failed to parse metadata file: %w", err))
+			}
+
+			versionToMetadata[version] = depVersion
 		}
 	}
+	return versionToMetadata
+}
 
-	artifacts := findArtifacts(artifactPath, id)
-
-	bytes, err := json.Marshal(artifacts)
+func printAsJson(item interface{}) {
+	bytes, err := json.Marshal(item)
 	if err != nil {
 		panic("cannot marshal")
 	}
-	fmt.Println("Found artifacts:")
 	fmt.Println(string(bytes))
 }
 
