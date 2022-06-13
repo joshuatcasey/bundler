@@ -45,7 +45,7 @@ func main() {
 		for _, tarball := range tarballs {
 			fmt.Printf("- %s\n", filepath.Base(tarball))
 
-			file, err := os.Open(filepath.Join(artifactPath, tarball))
+			file, err := os.Open(tarball)
 			if err != nil {
 				panic(err)
 			}
