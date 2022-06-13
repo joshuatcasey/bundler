@@ -6,6 +6,15 @@ on:
     - cron: '0 */12 * * *'  # https://crontab.guru/every-12-hours
 
 jobs:
+  select-go-version:
+    name: Select Go Version
+    runs-on: ubuntu-latest
+    outputs:
+      go-version: ${{ steps.select-go-version.outputs.go-version }}
+    steps:
+      - name: Select Go Version
+        id: select-go-version
+        run: echo "::set-output name=go-version::>=1.18.0"
   get_branch_name:
     name: Get Branch Name
     runs-on: ubuntu-latest
@@ -31,20 +40,22 @@ jobs:
           operatingSystems=$(cat dependency/operating_systems.json)
           echo "Found operatingSystems ${operatingSystems}"
           echo "::set-output name=operating_systems::${operatingSystems}"
-      - name: Found ${{ steps.get_operating_systems.outputs.operating_systems }}
+      - name: Found '${{ steps.get_operating_systems.outputs.operating_systems }}'
         run: echo ${{ steps.get_operating_systems.outputs.operating_systems }}
   retrieve:
     name: Retrieve new versions
+    needs:
+      - select-go-version
     runs-on: ubuntu-latest
     outputs:
       new_versions: ${{ steps.retrieve.outputs.new_versions }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Setup go >=1.18.0
+      - name: Setup go '${{ needs.select-go-version.outputs.go-version }}'
         uses: actions/setup-go@v3
         with:
-          go-version: '>=1.18.0'
+          go-version: ${{ needs.select-go-version.outputs.go-version }}
       - name: Retrieve new versions
         id: retrieve
         run: |
@@ -53,7 +64,7 @@ jobs:
             echo "Found versions ${versions}"
             echo "::set-output name=new_versions::${versions}"
           popd > /dev/null
-      - name: Found ${{ steps.retrieve.outputs.new_versions }}
+      - name: Found '${{ steps.retrieve.outputs.new_versions }}'
         run: echo ${{ steps.retrieve.outputs.new_versions }}
   metadata:
     name: Retrieve metadata for new versions
@@ -77,7 +88,7 @@ jobs:
             echo "${metadata}" > "metadata-${{ matrix.version }}.json"
             echo "::set-output name=metadata::${metadata}"
           popd > /dev/null
-      - name: Found ${{ steps.metadata.outputs.metadata }}
+      - name: Found '${{ steps.metadata.outputs.metadata }}'
         run: cat dependency/metadata-${{ matrix.version }}.json
       - name: Upload 'metadata-${{ matrix.version }}.json'
         uses: actions/upload-artifact@v3
@@ -162,14 +173,14 @@ jobs:
         with:
           name: metadata-${{ matrix.version }}.json
           path: dependency/
-      - name: Print dependency/metadata-${{ matrix.version }}.json
+      - name: Print 'dependency/metadata-${{ matrix.version }}.json'
         run: cat dependency/metadata-${{ matrix.version }}.json
       - name: Download '${{ steps.tarball_name.outputs.tarball_name }}'
         uses: actions/download-artifact@v3
         with:
           name: ${{ steps.tarball_name.outputs.tarball_name }}
           path: dependency/
-      - name: Describe dependency/${{ steps.tarball_name.outputs.tarball_name }}
+      - name: Describe 'dependency/${{ steps.tarball_name.outputs.tarball_name }}'
         run: |
           ls -lsa dependency/${{ steps.tarball_name.outputs.tarball_name }}
       - name: Prepare Commit
@@ -177,16 +188,16 @@ jobs:
           id=$(cat dependency/NAME)
           pushd libdependency > /dev/null
             make prepare-commit \
-              metadataPath="../metadata-${{ matrix.version }}.json" \
-              tarballName="../${{ steps.tarball_name.outputs.tarball_name }}" \
+              metadataPath="${PWD}/metadata-${{ matrix.version }}.json" \
+              tarballName="${PWD}/${{ steps.tarball_name.outputs.tarball_name }}" \
               id="${id}" \
               version="${{ matrix.version }}" \
               os="${{ matrix.os }}"
           popd > /dev/null
-      - name: Cleanup `metadata-${{ matrix.version }}.json'
+      - name: Cleanup 'metadata-${{ matrix.version }}.json'
         run: |
           rm dependency/metadata-${{ matrix.version }}.json
-      - name: Cleanup `${{ steps.tarball_name.outputs.tarball_name }}'
+      - name: Cleanup '${{ steps.tarball_name.outputs.tarball_name }}'
         run: |
           rm dependency/${{ steps.tarball_name.outputs.tarball_name }}
       - name: Show git diff
@@ -208,10 +219,10 @@ jobs:
       - prepare-commits
     runs-on: ubuntu-latest
     steps:
-      - name: Setup go >=1.18.0
+      - name: Setup go '${{ needs.select-go-version.outputs.go-version }}'
         uses: actions/setup-go@v3
         with:
-          go-version: '>=1.18.0'
+          go-version: ${{ needs.select-go-version.outputs.go-version }}
       - name: Check out code
         uses: actions/checkout@v2
         with:
