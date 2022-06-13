@@ -15,7 +15,7 @@ type Artifact struct {
 	Uri           string
 	TarballSHA256 string
 	Os            string
-	version       string
+	Version       string
 }
 
 func main() {
@@ -98,7 +98,7 @@ func findArtifacts(artifactPath string, id string) []Artifact {
 				if isOS(file) {
 					artifact.Os = string(bytes)
 				} else if isVersion(file) {
-					artifact.version = string(bytes)
+					artifact.Version = string(bytes)
 				} else if isSHA256(file) {
 					artifact.TarballSHA256 = string(bytes)
 				}
