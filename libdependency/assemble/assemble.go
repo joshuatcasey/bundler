@@ -9,6 +9,12 @@ import (
 	"github.com/paketo-buildpacks/packit/v2/fs"
 )
 
+type Artifact struct {
+	tarballPath   string
+	uri           string
+	tarballSHA256 string
+}
+
 func main() {
 	id := os.Args[1]
 	artifactPath := os.Args[2]
@@ -36,6 +42,8 @@ func main() {
 		}
 	}
 
+	var artifacts []Artifact
+
 	tarballGlob := filepath.Join(artifactPath, fmt.Sprintf("%s-*", id))
 	if tarballs, err := filepath.Glob(tarballGlob); err != nil {
 		panic(err)
@@ -56,15 +64,47 @@ func main() {
 				panic(err)
 			}
 
+			artifact := Artifact{
+				uri: "<UNKNOWN>",
+			}
 			for _, file := range files {
+				fullpath := filepath.Join(tarball, file.Name())
 				fmt.Printf("  - %s, isDir=%t, isTarball=%t, isSHA256=%t\n",
 					file.Name(),
 					file.IsDir(),
 					isTarball(file),
 					isSHA256(file))
+
+				if isTarball(file) {
+					artifact.tarballPath = fullpath
+				}
+
+				if isSHA256(file) {
+					bytes, err := os.ReadFile(fullpath)
+					if err != nil {
+						panic(err)
+					}
+					artifact.tarballSHA256 = string(bytes)
+				}
 			}
+
+			calculatedSHA256, err := fs.NewChecksumCalculator().Sum(artifact.tarballPath)
+			calculatedSHA256 = calculatedSHA256[:64]
+			if !strings.HasPrefix(artifact.tarballSHA256, calculatedSHA256) {
+				fmt.Printf("SHA256 does not match! Expected=%s, Calculated=%s\n", artifact.tarballSHA256, calculatedSHA256)
+				panic("SHA256 does not match!")
+			}
+			artifact.tarballSHA256 = calculatedSHA256
+
+			if err != nil {
+				panic(err)
+			}
+
+			artifacts = append(artifacts, artifact)
 		}
 	}
+
+	fmt.Printf("Found artifacts %v\n", artifacts)
 }
 
 func isTarball(file os.FileInfo) bool {
