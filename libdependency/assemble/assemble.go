@@ -60,7 +60,7 @@ func getMetadata(artifactPath string) map[string]common.DepVersion {
 
 			var depVersion common.DepVersion
 
-			metadataContents, err := os.ReadFile(filepath.Join(metadata, filepath.Base(metadata))
+			metadataContents, err := os.ReadFile(filepath.Join(metadata, filepath.Base(metadata)))
 			if err != nil {
 				panic(err)
 			}
