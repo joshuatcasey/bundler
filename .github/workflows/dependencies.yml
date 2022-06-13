@@ -112,7 +112,7 @@ jobs:
       - name: Setup tarball name
         id: tarball_name
         run: |
-          echo "::set-output name=tarball_name::$(cat dependency/NAME)-${{ matrix.version }}-${{ matrix.os }}.tgz"
+          echo "::set-output name=tarball_name::$(cat dependency/ID)-${{ matrix.version }}-${{ matrix.os }}.tgz"
       - name: Prepare '${{ matrix.os }}'
         run: . dependency/prepare/${{ matrix.os }}
       - name: Compile '${{ steps.tarball_name.outputs.tarball_name }}'
@@ -167,7 +167,7 @@ jobs:
       - name: Setup tarball name
         id: tarball_name
         run: |
-          echo "::set-output name=tarball_name::$(cat dependency/NAME)-${{ matrix.version }}-${{ matrix.os }}.tgz"
+          echo "::set-output name=tarball_name::$(cat dependency/ID)-${{ matrix.version }}-${{ matrix.os }}.tgz"
       - name: Download 'metadata-${{ matrix.version }}.json'
         uses: actions/download-artifact@v3
         with:
@@ -185,7 +185,7 @@ jobs:
           ls -lsa dependency/${{ steps.tarball_name.outputs.tarball_name }}
       - name: Prepare Commit
         run: |
-          id=$(cat dependency/NAME)
+          id=$(cat dependency/ID)
           pushd libdependency > /dev/null
             make prepare-commit \
               metadataPath="${PWD}/metadata-${{ matrix.version }}.json" \
