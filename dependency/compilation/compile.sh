@@ -7,12 +7,14 @@ readonly PROGDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly NAME="bundler"
 
 function main() {
-  local version tarball_name temp_dir output_dir
+  local version tarball_name temp_dir output_dir os
   version="${1}"
   tarball_name="${2}"
+  os="${2}"
 
   echo "version=${version}"
   echo "tarball_name=${tarball_name}"
+  echo "os=${os}"
 
   temp_dir="$(mktemp -d)"
   output_dir="$(pwd)"
@@ -35,6 +37,8 @@ function main() {
 
   pushd "${output_dir}" > /dev/null
     sha256sum "${tarball_name}" > "${tarball_name}.sha256"
+    echo "${version}" > "${tarball_name}.version"
+    echo "${os}" > "${tarball_name}.os"
   popd > /dev/null
 
   rm -rf "${temp_dir}"

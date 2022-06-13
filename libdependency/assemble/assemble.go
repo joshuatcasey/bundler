@@ -77,6 +77,7 @@ func findArtifacts(artifactPath string, id string) []Artifact {
 			}
 			for _, file := range files {
 				fullpath := filepath.Join(tarball, file.Name())
+				fmt.Printf("  - %s\n", file.Name())
 
 				if isTarball(file) {
 					artifact.tarballPath = fullpath

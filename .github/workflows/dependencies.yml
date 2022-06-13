@@ -125,7 +125,8 @@ jobs:
         run: |
           make compile \
             version="${{ matrix.version }}" \
-            tarball_name="${{ steps.tarball_name.outputs.tarball_name }}.tgz"
+            tarball_name="${{ steps.tarball_name.outputs.tarball_name }}.tgz" \
+            os="${{ matrix.os }}"
       - name: Test '${{ steps.tarball_name.outputs.tarball_name }}'
         working-directory: dependency
         run: |
