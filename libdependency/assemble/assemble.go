@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/paketo-buildpacks/packit/v2/fs"
 )
@@ -45,19 +46,31 @@ func main() {
 		for _, tarball := range tarballs {
 			fmt.Printf("- %s\n", filepath.Base(tarball))
 
-			file, err := os.Open(tarball)
+			dir, err := os.Open(tarball)
 			if err != nil {
 				panic(err)
 			}
 
-			files, err := file.Readdir(0)
+			files, err := dir.Readdir(0)
 			if err != nil {
 				panic(err)
 			}
 
-			for _, v := range files {
-				fmt.Printf("  - %s, isDir=%t", v.Name(), v.IsDir())
+			for _, file := range files {
+				fmt.Printf("  - %s, isDir=%t, isTarball=%t, isSHA256=%t\n",
+					file.Name(),
+					file.IsDir(),
+					isTarball(file),
+					isSHA256(file))
 			}
 		}
 	}
+}
+
+func isTarball(file os.FileInfo) bool {
+	return strings.HasSuffix(file.Name(), ".tgz")
+}
+
+func isSHA256(file os.FileInfo) bool {
+	return strings.HasSuffix(file.Name(), ".sha256")
 }
