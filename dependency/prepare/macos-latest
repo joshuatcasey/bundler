@@ -1,2 +1,1 @@
 brew install coreutils
-alias gensha256="shasum --algorithm=256"

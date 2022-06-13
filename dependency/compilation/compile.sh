@@ -33,6 +33,10 @@ function main() {
     tar czvf "${output_dir}/${tarball_name}" .
   popd > /dev/null
 
+  pushd "${output_dir}" > /dev/null
+    sha256sum "${tarball_name}" > "${tarball_name}.sha256"
+  popd > /dev/null
+
   rm -rf "${temp_dir}"
 }
 

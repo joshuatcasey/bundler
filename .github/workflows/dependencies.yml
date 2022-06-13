@@ -119,18 +119,22 @@ jobs:
         id: compile
         run: |
           pushd dependency > /dev/null
-            make compile version="${{ matrix.version }}" tarball_name="${{ steps.tarball_name.outputs.tarball_name }}"
+            make compile \
+              version="${{ matrix.version }}" \
+              tarball_name="${{ steps.tarball_name.outputs.tarball_name }}"
           popd > /dev/null
       - name: Test '${{ steps.tarball_name.outputs.tarball_name }}'
         run: |
           pushd dependency > /dev/null
-            make test version="${{ matrix.version }}" tarball_name="${{ steps.tarball_name.outputs.tarball_name }}"
+            make test \
+              version="${{ matrix.version }}" \
+              tarball_name="${{ steps.tarball_name.outputs.tarball_name }}"
           popd > /dev/null
       - name: Upload '${{ steps.tarball_name.outputs.tarball_name }}'
         uses: actions/upload-artifact@v3
         with:
           name: ${{ steps.tarball_name.outputs.tarball_name }}
-          path: dependency/${{ steps.tarball_name.outputs.tarball_name }}
+          path: 'dependency/${{ steps.tarball_name.outputs.tarball_name }}*'
   list-all-artifacts:
     name: List All Artifacts
     needs:
