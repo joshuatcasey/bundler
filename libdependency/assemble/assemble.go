@@ -8,10 +8,12 @@ import (
 	"github.com/paketo-buildpacks/packit/v2/fs"
 )
 
-var id = "bundler"
-
 func main() {
-	artifactPath := os.Args[1]
+	id := os.Args[1]
+	artifactPath := os.Args[2]
+
+	fmt.Printf("id=%s\n", id)
+	fmt.Printf("artifactPath=%s\n", artifactPath)
 
 	if exists, err := fs.Exists(artifactPath); err != nil {
 		panic(err)
@@ -21,7 +23,7 @@ func main() {
 		panic(fmt.Errorf("directory %s is empty", artifactPath))
 	}
 
-	metadataGlob := filepath.Join(artifactPath, "metadata-**.json")
+	metadataGlob := filepath.Join(artifactPath, "metadata-*.json")
 	if metadataFiles, err := filepath.Glob(metadataGlob); err != nil {
 		panic(err)
 	} else if len(metadataFiles) < 1 {
@@ -33,7 +35,7 @@ func main() {
 		}
 	}
 
-	tarballGlob := filepath.Join(artifactPath, fmt.Sprintf("%s-**.tgz", id))
+	tarballGlob := filepath.Join(artifactPath, fmt.Sprintf("%s-*", id))
 	if tarballs, err := filepath.Glob(tarballGlob); err != nil {
 		panic(err)
 	} else if len(tarballs) < 1 {
