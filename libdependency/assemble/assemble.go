@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -46,7 +47,12 @@ func main() {
 
 	artifacts := findArtifacts(artifactPath, id)
 
-	fmt.Printf("Found artifacts %v\n", artifacts)
+	bytes, err := json.Marshal(artifacts)
+	if err != nil {
+		panic("cannot marshal")
+	}
+	fmt.Println("Found artifacts:")
+	fmt.Println(string(bytes))
 }
 
 func findArtifacts(artifactPath string, id string) []Artifact {
