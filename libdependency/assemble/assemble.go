@@ -13,6 +13,8 @@ type Artifact struct {
 	tarballPath   string
 	uri           string
 	tarballSHA256 string
+	os            string
+	version       string
 }
 
 func main() {
@@ -42,6 +44,12 @@ func main() {
 		}
 	}
 
+	artifacts := findArtifacts(artifactPath, id)
+
+	fmt.Printf("Found artifacts %v\n", artifacts)
+}
+
+func findArtifacts(artifactPath string, id string) []Artifact {
 	var artifacts []Artifact
 
 	tarballGlob := filepath.Join(artifactPath, fmt.Sprintf("%s-*", id))
@@ -69,21 +77,22 @@ func main() {
 			}
 			for _, file := range files {
 				fullpath := filepath.Join(tarball, file.Name())
-				fmt.Printf("  - %s, isDir=%t, isTarball=%t, isSHA256=%t\n",
-					file.Name(),
-					file.IsDir(),
-					isTarball(file),
-					isSHA256(file))
 
 				if isTarball(file) {
 					artifact.tarballPath = fullpath
+					continue
 				}
 
-				if isSHA256(file) {
-					bytes, err := os.ReadFile(fullpath)
-					if err != nil {
-						panic(err)
-					}
+				bytes, err := os.ReadFile(fullpath)
+				if err != nil {
+					panic(err)
+				}
+
+				if isOS(file) {
+					artifact.os = string(bytes)
+				} else if isVersion(file) {
+					artifact.version = string(bytes)
+				} else if isSHA256(file) {
 					artifact.tarballSHA256 = string(bytes)
 				}
 			}
@@ -103,8 +112,7 @@ func main() {
 			artifacts = append(artifacts, artifact)
 		}
 	}
-
-	fmt.Printf("Found artifacts %v\n", artifacts)
+	return artifacts
 }
 
 func isTarball(file os.FileInfo) bool {
@@ -113,4 +121,12 @@ func isTarball(file os.FileInfo) bool {
 
 func isSHA256(file os.FileInfo) bool {
 	return strings.HasSuffix(file.Name(), ".sha256")
+}
+
+func isOS(file os.FileInfo) bool {
+	return strings.HasSuffix(file.Name(), ".os")
+}
+
+func isVersion(file os.FileInfo) bool {
+	return strings.HasSuffix(file.Name(), ".version")
 }
