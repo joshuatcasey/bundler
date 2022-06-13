@@ -64,12 +64,11 @@ jobs:
           go-version: ${{ needs.select-go-version.outputs.go-version }}
       - name: Retrieve new versions
         id: retrieve
+        working-directory: dependency
         run: |
-          pushd dependency > /dev/null
-            versions=$(make retrieve)
-            echo "Found versions ${versions}"
-            echo "::set-output name=new_versions::${versions}"
-          popd > /dev/null
+          versions=$(make retrieve)
+          echo "Found versions ${versions}"
+          echo "::set-output name=new_versions::${versions}"
       - name: Found '${{ steps.retrieve.outputs.new_versions }}'
         run: echo ${{ steps.retrieve.outputs.new_versions }}
   metadata:
@@ -87,13 +86,12 @@ jobs:
         uses: actions/checkout@v2
       - name: Add Metadata for version
         id: metadata
+        working-directory: dependency
         run: |
-          set -euo pipefail
-          pushd dependency > /dev/null
-            metadata=$(make metadata version="${{ matrix.version }}")
-            echo "${metadata}" > "metadata-${{ matrix.version }}.json"
-            echo "::set-output name=metadata::${metadata}"
-          popd > /dev/null
+          # Should 'make metadata' provide STDOUT or a file?
+          metadata=$(make metadata version="${{ matrix.version }}")
+          echo "${metadata}" > "metadata-${{ matrix.version }}.json"
+          echo "::set-output name=metadata::${metadata}"
       - name: Found '${{ steps.metadata.outputs.metadata }}'
         run: cat dependency/metadata-${{ matrix.version }}.json
       - name: Upload 'metadata-${{ matrix.version }}.json'
@@ -123,19 +121,17 @@ jobs:
         run: . dependency/prepare/${{ matrix.os }}
       - name: Compile '${{ steps.tarball_name.outputs.tarball_name }}'
         id: compile
+        working-directory: dependency
         run: |
-          pushd dependency > /dev/null
-            make compile \
-              version="${{ matrix.version }}" \
-              tarball_name="${{ steps.tarball_name.outputs.tarball_name }}.tgz"
-          popd > /dev/null
+          make compile \
+            version="${{ matrix.version }}" \
+            tarball_name="${{ steps.tarball_name.outputs.tarball_name }}.tgz"
       - name: Test '${{ steps.tarball_name.outputs.tarball_name }}'
+        working-directory: dependency
         run: |
-          pushd dependency > /dev/null
-            make test \
-              version="${{ matrix.version }}" \
-              tarball_name="${{ steps.tarball_name.outputs.tarball_name }}.tgz"
-          popd > /dev/null
+          make test \
+            version="${{ matrix.version }}" \
+            tarball_name="${{ steps.tarball_name.outputs.tarball_name }}.tgz"
       - name: Upload '${{ steps.tarball_name.outputs.tarball_name }}'
         uses: actions/upload-artifact@v3
         with:
@@ -194,16 +190,14 @@ jobs:
         run: |
           ls -lsa dependency/${{ steps.tarball_name.outputs.tarball_name }}
       - name: Prepare Commit
+        working-directory: libdependency
         run: |
-          id=$(cat dependency/ID)
-          pushd libdependency > /dev/null
-            make prepare-commit \
-              metadataPath="${PWD}/metadata-${{ matrix.version }}.json" \
-              tarballName="${PWD}/${{ steps.tarball_name.outputs.tarball_name }}" \
-              id="${id}" \
-              version="${{ matrix.version }}" \
-              os="${{ matrix.os }}"
-          popd > /dev/null
+          make prepare-commit \
+            metadataPath="${PWD}/metadata-${{ matrix.version }}.json" \
+            tarballName="${PWD}/${{ steps.tarball_name.outputs.tarball_name }}" \
+            id="$(cat ${{ github.workspace }}/dependency/ID)" \
+            version="${{ matrix.version }}" \
+            os="${{ matrix.os }}"
       - name: Cleanup 'metadata-${{ matrix.version }}.json'
         run: |
           rm dependency/metadata-${{ matrix.version }}.json
@@ -238,10 +232,9 @@ jobs:
         with:
           ref: ${{ needs.get_branch_name.outputs.branch-name }}
       - name: Prune
+        working-directory: libdependency
         run: |
-          pushd libdependency > /dev/null
-            make prune
-          popd > /dev/null
+          make prune
       - name: Commit
         id: commit
         uses: paketo-buildpacks/github-config/actions/pull-request/create-commit@main
@@ -297,7 +290,6 @@ jobs:
         with:
           path: ${{ steps.setup-temp-dir.outputs.artifactPath }}
       - name: Run assemble
+        working-directory: libdependency
         run: |
-          pushd libdependency > /dev/null
-            make assemble artifactPath=${{ steps.setup-temp-dir.outputs.artifactPath }}
-          popd > /dev/null
+          make assemble artifactPath=${{ steps.setup-temp-dir.outputs.artifactPath }}
