@@ -137,18 +137,6 @@ jobs:
         with:
           name: ${{ steps.tarball_name.outputs.tarball_name }}
           path: 'dependency/${{ steps.tarball_name.outputs.tarball_name }}.tgz*'
-  list-all-artifacts:
-    name: List All Artifacts
-    needs:
-      - compile
-    runs-on: ubuntu-latest
-    steps:
-      - name: Get all artifacts
-        uses: actions/download-artifact@v3
-        with:
-          path: .
-      - name: List everything
-        run: ls -lsaRth
   prepare-commits:
     name: Prepare Commits
     needs:
@@ -289,7 +277,11 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           path: ${{ steps.setup-temp-dir.outputs.artifactPath }}
+      - name: List everything
+        working-directory: ${{ steps.setup-temp-dir.outputs.artifactPath }}
+        run: ls -lsaRth
       - name: Run assemble
         working-directory: libdependency
         run: |
-          make assemble artifactPath=${{ steps.setup-temp-dir.outputs.artifactPath }}
+          make assemble \
+            artifactPath=${{ steps.setup-temp-dir.outputs.artifactPath }}
