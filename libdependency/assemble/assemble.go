@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/joshuatcasey/bundler/libdependency/common"
 	"github.com/paketo-buildpacks/packit/v2/fs"
 )
 
@@ -24,6 +25,8 @@ func main() {
 
 	fmt.Printf("id=%s\n", id)
 	fmt.Printf("artifactPath=%s\n", artifactPath)
+
+	var thing common.DepVersion
 
 	if exists, err := fs.Exists(artifactPath); err != nil {
 		panic(err)

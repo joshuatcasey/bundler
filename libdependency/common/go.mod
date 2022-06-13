@@ -1,4 +1,4 @@
-module github.com/joshuatcasey/libdependency/common
+module github.com/joshuatcasey/bundler/libdependency/common
 
 go 1.18
 
