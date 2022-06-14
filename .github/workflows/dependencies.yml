@@ -84,20 +84,24 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
+      - name: Get metadata filename
+        id: get-metadata-filename
+        run: |
+          echo "::set-output name=metadata-filename::metadata-${{ matrix.version }}.json"
       - name: Add Metadata for version
         id: metadata
         working-directory: dependency
         run: |
-          # Should 'make metadata' provide STDOUT or a file?
-          metadata=$(make metadata version="${{ matrix.version }}")
-          echo "${metadata}" > "metadata-${{ matrix.version }}.json"
-          echo "::set-output name=metadata::${metadata}"
-      - name: Found '${{ steps.metadata.outputs.metadata }}'
-        run: cat dependency/metadata-${{ matrix.version }}.json
-      - name: Upload 'metadata-${{ matrix.version }}.json'
+          make metadata \
+            version="${{ matrix.version }}" \
+            output="${{ steps.get-metadata-filename.outputs.metadata-filename }}"
+      - name: Output metadata '${{ steps.get-metadata-filename.outputs.metadata-filename }}'
+        working-directory: dependency
+        run: cat ${{ steps.get-metadata-filename.outputs.metadata-filename }}
+      - name: Upload `${{ steps.get-metadata-filename.outputs.metadata-filename }}'
         uses: actions/upload-artifact@v3
         with:
-          name: metadata-${{ matrix.version }}.json
+          name: ${{ steps.get-metadata-filename.outputs.metadata-filename }}
           path: dependency/metadata-${{ matrix.version }}.json
   compile:
     name: Compile

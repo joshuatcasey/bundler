@@ -26,11 +26,22 @@ type DepVersion struct {
 
 func main() {
 	version := os.Args[1]
+	output := os.Args[2]
+
+	fmt.Printf("version=%s\n", version)
+	fmt.Printf("output=%s\n", output)
+
 	dependencyVersion := getDependencyVersion(version)
 	bytes, err := json.Marshal(dependencyVersion)
 	if err != nil {
-		panic("cannot marshal")
+		panic(fmt.Errorf("cannot marshal: %w", err))
 	}
+
+	err = os.WriteFile(output, bytes, os.ModePerm)
+	if err != nil {
+		panic(fmt.Errorf("cannot write to %s: %w", output, err))
+	}
+
 	fmt.Println(string(bytes))
 }
 
