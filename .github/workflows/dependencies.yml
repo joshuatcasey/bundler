@@ -84,24 +84,24 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Get metadata filename
-        id: get-metadata-filename
+      - name: Get metadata filepath
+        id: get-metadata-filepath
         run: |
-          echo "::set-output name=metadata-filename::metadata-${{ matrix.version }}.json"
+          echo "::set-output name=metadata-filepath::${{ github.workspace }}/metadata-${{ matrix.version }}.json"
       - name: Add Metadata for version
         id: metadata
         working-directory: dependency
         run: |
           make metadata \
             version="${{ matrix.version }}" \
-            output="${{ steps.get-metadata-filename.outputs.metadata-filename }}"
-      - name: Output metadata '${{ steps.get-metadata-filename.outputs.metadata-filename }}'
+            output="${{ steps.get-metadata-filepath.outputs.metadata-filepath }}"
+      - name: Output metadata '${{ steps.get-metadata-filepath.outputs.metadata-filepath }}'
         working-directory: dependency
-        run: cat ${{ steps.get-metadata-filename.outputs.metadata-filename }}
-      - name: Upload `${{ steps.get-metadata-filename.outputs.metadata-filename }}'
+        run: cat ${{ steps.get-metadata-filepath.outputs.metadata-filepath }}
+      - name: Upload `${{ steps.get-metadata-filepath.outputs.metadata-filepath }}'
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.get-metadata-filename.outputs.metadata-filename }}
+          name: ${{ steps.get-metadata-filepath.outputs.metadata-filepath }}
           path: dependency/metadata-${{ matrix.version }}.json
   compile:
     name: Compile
