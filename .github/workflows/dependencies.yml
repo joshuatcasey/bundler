@@ -142,133 +142,13 @@ jobs:
         with:
           name: ${{ steps.tarball_name.outputs.tarball_name }}
           path: 'dependency/${{ steps.tarball_name.outputs.tarball_name }}.tgz*'
-  prepare-commits:
-    name: Prepare Commits
-    needs:
-      - get_branch_name
-      - get_operating_systems
-      - retrieve
-      - metadata
-      - compile
-    strategy:
-      max-parallel: 1 # Very important! Commits will clobber each other
-      matrix:
-        os: ${{ fromJSON(needs.get_operating_systems.outputs.operating_systems) }}
-        version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-      - name: Checkout Branch '${{ needs.get_branch_name.outputs.branch-name }}'
-        uses: paketo-buildpacks/github-config/actions/pull-request/checkout-branch@main
-        with:
-          branch: ${{ needs.get_branch_name.outputs.branch-name }}
-      - name: Setup tarball name
-        id: tarball_name
-        run: |
-          echo "::set-output name=tarball_name::$(cat dependency/ID)-${{ matrix.version }}-${{ matrix.os }}.tgz"
-      - name: Download 'metadata-${{ matrix.version }}.json'
-        uses: actions/download-artifact@v3
-        with:
-          name: metadata-${{ matrix.version }}.json
-          path: dependency/
-      - name: Print 'dependency/metadata-${{ matrix.version }}.json'
-        run: cat dependency/metadata-${{ matrix.version }}.json
-      - name: Download '${{ steps.tarball_name.outputs.tarball_name }}'
-        uses: actions/download-artifact@v3
-        with:
-          name: ${{ steps.tarball_name.outputs.tarball_name }}
-          path: dependency/
-      - name: Describe 'dependency/${{ steps.tarball_name.outputs.tarball_name }}'
-        run: |
-          ls -lsa dependency/${{ steps.tarball_name.outputs.tarball_name }}
-      - name: Prepare Commit
-        working-directory: libdependency
-        run: |
-          make prepare-commit \
-            metadataPath="${PWD}/metadata-${{ matrix.version }}.json" \
-            tarballName="${PWD}/${{ steps.tarball_name.outputs.tarball_name }}" \
-            id="$(cat ${{ github.workspace }}/dependency/ID)" \
-            version="${{ matrix.version }}" \
-            os="${{ matrix.os }}"
-      - name: Cleanup 'metadata-${{ matrix.version }}.json'
-        run: |
-          rm dependency/metadata-${{ matrix.version }}.json
-      - name: Cleanup '${{ steps.tarball_name.outputs.tarball_name }}'
-        run: |
-          rm dependency/${{ steps.tarball_name.outputs.tarball_name }}
-      - name: Show git diff
-        run: git diff
-      - name: Commit
-        id: commit
-        uses: paketo-buildpacks/github-config/actions/pull-request/create-commit@main
-        with:
-          message: "Updating dependencies in buildpack.toml with ${{ matrix.version }}-${{ matrix.os }}"
-          pathspec: "."
-      - name: Push Branch '${{ needs.get_branch_name.outputs.branch-name }}'
-        uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
-        with:
-          branch: ${{ needs.get_branch_name.outputs.branch-name }}
-  prune:
-    name: Prune old versions
-    needs:
-      - get_branch_name
-      - prepare-commits
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup go '${{ needs.select-go-version.outputs.go-version }}'
-        uses: actions/setup-go@v3
-        with:
-          go-version: ${{ needs.select-go-version.outputs.go-version }}
-      - name: Check out code
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ needs.get_branch_name.outputs.branch-name }}
-      - name: Prune
-        working-directory: libdependency
-        run: |
-          make prune
-      - name: Commit
-        id: commit
-        uses: paketo-buildpacks/github-config/actions/pull-request/create-commit@main
-        with:
-          message: "Pruning buildpack.toml"
-          pathspec: "."
-      - name: Push Branch '${{ needs.get_branch_name.outputs.branch-name }}'
-        uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
-        with:
-          branch: ${{ needs.get_branch_name.outputs.branch-name }}
-  submit-pull-request:
-    name: Submit Pull Request
-    needs:
-      - get_branch_name
-      - retrieve
-      - prepare-commits
-      - prune
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ needs.get_branch_name.outputs.branch-name }}
-      - name: PR Title
-        id: title
-        run: |
-          echo "::set-output name=include_versions:: with new dependency versions: ${{ matrix.version }}"
-      - name: Open Pull Request
-        run: |
-          gh pr create \
-            --title "Updates buildpack.toml with ${{ needs.retrieve.outputs.new_versions }}" \
-            --body "See commit history for details" \
-            --base main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   assemble:
     name: Assemble Metadata information
     needs:
       - metadata
       - compile
       - select-go-version
+      - get_branch_name
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -301,3 +181,36 @@ jobs:
         run: |
           cat ${{ github.workspace }}/buildpack.toml
           git diff
+      - name: Commit
+        id: commit
+        uses: paketo-buildpacks/github-config/actions/pull-request/create-commit@main
+        with:
+          message: "Pruning buildpack.toml"
+          pathspec: "."
+      - name: Push Branch '${{ needs.get_branch_name.outputs.branch-name }}'
+        uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
+        with:
+          branch: ${{ needs.get_branch_name.outputs.branch-name }}
+  submit-pull-request:
+    name: Submit Pull Request
+    needs:
+      - get_branch_name
+      - assemble
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.get_branch_name.outputs.branch-name }}
+      - name: PR Title
+        id: title
+        run: |
+          echo "::set-output name=include_versions:: with new dependency versions: ${{ matrix.version }}"
+      - name: Open Pull Request
+        run: |
+          gh pr create \
+            --title "Updates buildpack.toml with ${{ needs.retrieve.outputs.new_versions }}" \
+            --body "See commit history for details" \
+            --base main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
