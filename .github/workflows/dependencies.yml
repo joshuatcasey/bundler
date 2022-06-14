@@ -298,4 +298,6 @@ jobs:
             artifactPath=${{ steps.setup-temp-dir.outputs.artifactPath }} \
             buildpackTomlPath=${{ github.workspace }}/buildpack.toml
       - name: Show git diff
-        run: git diff
+        run: |
+          cat ${{ github.workspace }}/buildpack.toml
+          git diff

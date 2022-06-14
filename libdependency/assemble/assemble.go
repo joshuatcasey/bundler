@@ -55,6 +55,16 @@ func main() {
 	printAsJson(artifacts)
 
 	prepareCommit(artifacts, buildpackTomlPath)
+
+	bytes, err := os.ReadFile(buildpackTomlPath)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf(">>> %s\n", buildpackTomlPath)
+	fmt.Print(string(bytes))
+	fmt.Printf("\n<<<\n")
+
 	prune(buildpackTomlPath)
 }
 
