@@ -47,6 +47,14 @@ func main() {
 
 	fmt.Println("Found artifacts:")
 	printAsJson(artifacts)
+
+	prepareCommit(artifacts)
+}
+
+func prepareCommit(artifacts []Artifact) {
+	buildpackTomlPath := filepath.Join("..", "..", "buildpack.toml")
+	config := common.ParseBuildpackToml(buildpackTomlPath)
+	
 }
 
 func getMetadata(artifactPath string) map[string]*common.DepVersion {
