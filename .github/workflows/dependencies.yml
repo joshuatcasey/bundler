@@ -101,8 +101,8 @@ jobs:
       - name: Upload `${{ steps.get-metadata-filepath.outputs.metadata-filepath }}'
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.get-metadata-filepath.outputs.metadata-filepath }}
-          path: dependency/metadata-${{ matrix.version }}.json
+          name: metadata-${{ matrix.version }}.json
+          path: ${{ steps.get-metadata-filepath.outputs.metadata-filepath }}
   compile:
     name: Compile
     needs:
