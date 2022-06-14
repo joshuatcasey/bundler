@@ -10,4 +10,4 @@ retrieve:
 	@./retrieval/retrieve.sh
 
 metadata:
-	@./metadata/metadata.sh $(version)
+	@./metadata/metadata.sh $(version) $(output)
