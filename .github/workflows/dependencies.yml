@@ -290,4 +290,5 @@ jobs:
         run: |
           make assemble \
             id="$(cat ${{ github.workspace }}/dependency/ID)" \
-            artifactPath=${{ steps.setup-temp-dir.outputs.artifactPath }}
+            artifactPath=${{ steps.setup-temp-dir.outputs.artifactPath }} \
+            buildpackTomlPath=${{ github.workspace }}/buildpack.toml
