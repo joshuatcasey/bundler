@@ -54,7 +54,7 @@ func main() {
 	fmt.Println("Found artifacts:")
 	printAsJson(artifacts)
 
-	prepareCommit(artifacts, buildpackTomlPath)
+	prepareCommit(artifacts, id, buildpackTomlPath)
 
 	bytes, err := os.ReadFile(buildpackTomlPath)
 	if err != nil {
@@ -68,11 +68,12 @@ func main() {
 	prune(buildpackTomlPath)
 }
 
-func prepareCommit(artifacts []Artifact, buildpackTomlPath string) {
+func prepareCommit(artifacts []Artifact, id, buildpackTomlPath string) {
 	config := common.ParseBuildpackToml(buildpackTomlPath)
 
 	for _, artifact := range artifacts {
 		dependency := artifact.Metadata.ConfigMetadataDependency
+		dependency.ID = id
 		dependency.URI = artifact.Uri
 		dependency.SHA256 = artifact.TarballSHA256
 		dependency.Stacks = append(dependency.Stacks, artifact.Os)
