@@ -137,6 +137,7 @@ jobs:
       - metadata
       - compile
       - select-go-version
+      - retrieve
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -185,6 +186,7 @@ jobs:
     name: Submit Pull Request
     needs:
       - assemble
+      - retrieve
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
