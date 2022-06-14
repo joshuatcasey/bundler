@@ -125,11 +125,11 @@ func findArtifacts(artifactPath string, id string) []Artifact {
 				}
 
 				if isOS(file) {
-					artifact.Os = string(bytes)
+					artifact.Os = strings.TrimSpace(string(bytes))
 				} else if isVersion(file) {
-					artifact.Version = string(bytes)
+					artifact.Version = strings.TrimSpace(string(bytes))
 				} else if isSHA256(file) {
-					artifact.TarballSHA256 = string(bytes)
+					artifact.TarballSHA256 = strings.TrimSpace(string(bytes))
 				}
 			}
 

@@ -10,7 +10,7 @@ function main() {
   local version tarball_name temp_dir output_dir os
   version="${1}"
   tarball_name="${2}"
-  os="${2}"
+  os="${3}"
 
   echo "version=${version}"
   echo "tarball_name=${tarball_name}"
