@@ -17,6 +17,7 @@ type Artifact struct {
 	TarballSHA256 string
 	Os            string
 	Version       string
+	Metadata      *common.DepVersion
 }
 
 func main() {
@@ -39,12 +40,17 @@ func main() {
 	printAsJson(versionToMetadata)
 
 	artifacts := findArtifacts(artifactPath, id)
+
+	for _, artifact := range artifacts {
+		artifact.Metadata = versionToMetadata[artifact.Version]
+	}
+
 	fmt.Println("Found artifacts:")
 	printAsJson(artifacts)
 }
 
-func getMetadata(artifactPath string) map[string]common.DepVersion {
-	versionToMetadata := make(map[string]common.DepVersion)
+func getMetadata(artifactPath string) map[string]*common.DepVersion {
+	versionToMetadata := make(map[string]*common.DepVersion)
 	metadataGlob := filepath.Join(artifactPath, "metadata-*.json")
 	if metadataFiles, err := filepath.Glob(metadataGlob); err != nil {
 		panic(err)
@@ -70,7 +76,7 @@ func getMetadata(artifactPath string) map[string]common.DepVersion {
 				panic(fmt.Errorf("failed to parse metadata file: %w", err))
 			}
 
-			versionToMetadata[version] = depVersion
+			versionToMetadata[version] = &depVersion
 		}
 	}
 	return versionToMetadata
