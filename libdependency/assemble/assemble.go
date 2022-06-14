@@ -293,12 +293,12 @@ func prune(buildpackTomlPath string) {
 			dep2Version := semver.MustParse(dep2.Version)
 
 			if dep1Version.Equal(dep2Version) {
-				return len(dep1.Stacks) > len(dep2.Stacks)
+				return len(dep1.Stacks) < len(dep2.Stacks)
 			}
 
-			return dep1Version.GreaterThan(dep2Version)
+			return dep1Version.LessThan(dep2Version)
 		}
-		return dep1.ID > dep2.ID
+		return dep1.ID < dep2.ID
 	})
 
 	fmt.Println("dependenciesToKeep")
