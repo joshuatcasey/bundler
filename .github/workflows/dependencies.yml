@@ -21,17 +21,6 @@ jobs:
       - name: Select Go Version
         id: select-go-version
         run: echo "::set-output name=go-version::>=1.18.0"
-  get-branch-name:
-    name: Get Branch Name
-    runs-on: ubuntu-latest
-    outputs:
-      branch-name: ${{ steps.setup-branch-name.outputs.branch-name }}
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-      - name: Setup branch name
-        id: setup-branch-name
-        run: echo "::set-output name=branch-name::automation/dependencies/bump-$(git rev-parse --short HEAD)-$(date +%s)"
   get_operating_systems:
     name: Get Operating Systems
     runs-on: ubuntu-latest
@@ -148,13 +137,14 @@ jobs:
       - metadata
       - compile
       - select-go-version
-      - get-branch-name
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v2
+      - name: Checkout Branch 'automation/dependencies/update'
+        uses: paketo-buildpacks/github-config/actions/pull-request/checkout-branch@main
         with:
-          ref: ${{ needs.get-branch-name.outputs.branch-name }}
+          branch: automation/dependencies/update
       - name: Setup go '${{ needs.select-go-version.outputs.go-version }}'
         uses: actions/setup-go@v3
         with:
@@ -187,25 +177,20 @@ jobs:
         with:
           message: "Pruning buildpack.toml"
           pathspec: "."
-      - name: Push Branch '${{ needs.get-branch-name.outputs.branch-name }}'
+      - name: Push Branch 'automation/dependencies/update'
         uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
         with:
-          branch: ${{ needs.get-branch-name.outputs.branch-name }}
+          branch: automation/dependencies/update
   submit-pull-request:
     name: Submit Pull Request
     needs:
-      - get-branch-name
       - assemble
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v2
         with:
-          ref: ${{ needs.get-branch-name.outputs.branch-name }}
-      - name: PR Title
-        id: title
-        run: |
-          echo "::set-output name=include_versions:: with new dependency versions: ${{ matrix.version }}"
+          ref: automation/dependencies/update
       - name: Open Pull Request
         run: |
           gh pr create \
