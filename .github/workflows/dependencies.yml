@@ -175,7 +175,7 @@ jobs:
         id: commit
         uses: paketo-buildpacks/github-config/actions/pull-request/create-commit@main
         with:
-          message: "Pruning buildpack.toml"
+          message: "Updating buildpack.toml with new versions ${{ needs.retrieve.outputs.new_versions }}"
           pathspec: "."
       - name: Push Branch 'automation/dependencies/update'
         uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
