@@ -268,12 +268,17 @@ jobs:
     needs:
       - metadata
       - compile
+      - select-go-version
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v2
         with:
           ref: ${{ needs.get_branch_name.outputs.branch-name }}
+      - name: Setup go '${{ needs.select-go-version.outputs.go-version }}'
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ needs.select-go-version.outputs.go-version }}
       - name: Setup temp dir
         id: setup-temp-dir
         run: |
