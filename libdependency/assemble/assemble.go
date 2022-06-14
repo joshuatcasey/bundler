@@ -41,8 +41,8 @@ func main() {
 
 	artifacts := findArtifacts(artifactPath, id)
 
-	for _, artifact := range artifacts {
-		artifact.Metadata = versionToMetadata[artifact.Version]
+	for i := range artifacts {
+		artifacts[i].Metadata = versionToMetadata[artifacts[i].Version]
 	}
 
 	fmt.Println("Found artifacts:")
