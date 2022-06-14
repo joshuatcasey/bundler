@@ -21,7 +21,7 @@ jobs:
       - name: Select Go Version
         id: select-go-version
         run: echo "::set-output name=go-version::>=1.18.0"
-  get_branch_name:
+  get-branch-name:
     name: Get Branch Name
     runs-on: ubuntu-latest
     outputs:
@@ -148,13 +148,13 @@ jobs:
       - metadata
       - compile
       - select-go-version
-      - get_branch_name
+      - get-branch-name
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v2
         with:
-          ref: ${{ needs.get_branch_name.outputs.branch-name }}
+          ref: ${{ needs.get-branch-name.outputs.branch-name }}
       - name: Setup go '${{ needs.select-go-version.outputs.go-version }}'
         uses: actions/setup-go@v3
         with:
@@ -187,21 +187,21 @@ jobs:
         with:
           message: "Pruning buildpack.toml"
           pathspec: "."
-      - name: Push Branch '${{ needs.get_branch_name.outputs.branch-name }}'
+      - name: Push Branch '${{ needs.get-branch-name.outputs.branch-name }}'
         uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
         with:
-          branch: ${{ needs.get_branch_name.outputs.branch-name }}
+          branch: ${{ needs.get-branch-name.outputs.branch-name }}
   submit-pull-request:
     name: Submit Pull Request
     needs:
-      - get_branch_name
+      - get-branch-name
       - assemble
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v2
         with:
-          ref: ${{ needs.get_branch_name.outputs.branch-name }}
+          ref: ${{ needs.get-branch-name.outputs.branch-name }}
       - name: PR Title
         id: title
         run: |
