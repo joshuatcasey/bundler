@@ -156,6 +156,7 @@ func findArtifacts(artifactPath string, id string) []Artifact {
 				panic(err)
 			}
 
+			// TODO: fix unknown to real URI
 			artifact := Artifact{
 				Uri: "<UNKNOWN>",
 			}
