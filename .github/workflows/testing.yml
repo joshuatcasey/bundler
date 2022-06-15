@@ -21,7 +21,7 @@ jobs:
       - name: Get Image IDs
         id: get-image-ids
         run: |
-          echo "::set-output name=image-ids::$(jq '.[].image' -r dependency/targets.json)"
+          echo "::set-output name=image-ids::$(jq '[.[].image]' -r dependency/targets.json)"
       - name: Print Image IDs '${{ steps.get-image-ids.outputs.image-ids }}'
         run: echo ${{ steps.get-image-ids.outputs.image-ids }}
   testing-containers:
@@ -30,7 +30,7 @@ jobs:
       - get-image-ids
     strategy:
       matrix:
-        image: ${{ needs.get-image-ids.outputs.image-ids }}
+        image: ${{ fromJSON(needs.get-image-ids.outputs.image-ids) }}
     runs-on: ubuntu-latest
     container: ${{ matrix.image }}
     steps:
