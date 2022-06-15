@@ -20,3 +20,9 @@ func ParseBuildpackToml(buildpackTomlPath string) cargo.Config {
 	}
 	return config
 }
+
+type RetrievalOutput struct {
+	Versions []string
+	ID       string
+	Name     string
+}
