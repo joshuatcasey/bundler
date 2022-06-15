@@ -99,9 +99,9 @@ jobs:
       - retrieve
     strategy:
       matrix:
-        os: ${{ fromJSON(needs.get_operating_systems.outputs.operating_systems) }}
+        stack: $${ <<the list of folders in dependency/stacks>> [ "io.paketo.stacks.bionic", "io.paketo.stacks.jammy", "other-stack" ] }}
         version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
-    runs-on: ${{ matrix.os }}
+    runs-on: '${{ matrix.stack }}/Dockerfile'
     continue-on-error: true
     steps:
       - name: Check out code
