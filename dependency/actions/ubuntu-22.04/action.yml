@@ -1,0 +1,20 @@
+name: 'Build Bundler on jammy'
+description: |
+  Build Bundler on jammy
+
+inputs:
+  version:
+    description: Version of dependency
+    required: true
+  tarball_name:
+    description: output filename
+    required: true
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - ${{ inputs.version }}
+    - ${{ inputs.tarball_name }}
+    - "jammy"
+
