@@ -21,7 +21,16 @@ jobs:
       - name: Get Image IDs
         id: get-image-ids
         run: |
-          echo "::set-output name=image-ids::$(jq '[.[].image]' -r dependency/targets.json)"
+          IMAGE_IDS=$(jq '[.[].image]' -r dependency/targets.json)
+          IMAGE_IDS="${IMAGE_IDS//'%'/'%25'}"
+          IMAGE_IDS="${IMAGE_IDS//$'\n'/'%0A'}"
+          IMAGE_IDS="${IMAGE_IDS//$'\r'/'%0D'}"
+          echo "---"
+          echo "${IMAGE_IDS}"
+          echo "---"
+          echo ${IMAGE_IDS}
+          echo "---"
+          echo "::set-output name=image-ids::${IMAGE_IDS}"
       - name: Print Image IDs '${{ steps.get-image-ids.outputs.image-ids }}'
         run: echo ${{ steps.get-image-ids.outputs.image-ids }}
   testing-containers:
