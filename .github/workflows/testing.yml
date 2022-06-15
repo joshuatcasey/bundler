@@ -27,7 +27,7 @@ jobs:
         with:
           version: 2.3.13
           tarball_name: bundler-2.3.13.tgz
-          dockerfile: ${{ matrix.image }}
+          target: ${{ matrix.image }}
 #  get-image-ids:
 #    name: Get Image IDs
 #    runs-on: ubuntu-latest
