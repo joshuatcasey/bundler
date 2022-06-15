@@ -14,9 +14,9 @@ jobs:
     name: Testing Containers
     strategy:
       matrix:
-        image: [ "paketobuildpacks-jammy/build:full", "ubuntu", "alpine", "registry.access.redhat.com/ubi8/ubi" ]
+        image: [ "paketobuildpacks/build:full", "ubuntu", "alpine", "registry.access.redhat.com/ubi8/ubi" ]
     runs-on: ubuntu-latest
     container: ${{ matrix.image }}
     steps:
-      - name: Print out uname
+      - name: Print out uname for '${{ matrix.image }}'
         run: uname -a
