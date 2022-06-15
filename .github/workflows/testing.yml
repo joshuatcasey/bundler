@@ -15,18 +15,19 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        action:
-          - joshuatcasey/bundler/dependency/actions/compile/alpine@main
-          - joshuatcasey/bundler/dependency/actions/compile/bionic@main
-          - joshuatcasey/bundler/dependency/actions/compile/ubuntu-22.04@main
+        image:
+          - jammy
+          - bionic
+          - alpine
     steps:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Compile
-        uses: ${{ matrix.action }}
+        uses: joshuatcasey/dependency/actions/compile
         with:
           version: 2.3.13
           tarball_name: bundler-2.3.13.tgz
+          dockerfile: ${{ matrix.image }}
   get-image-ids:
     name: Get Image IDs
     runs-on: ubuntu-latest
