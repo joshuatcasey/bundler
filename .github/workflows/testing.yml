@@ -1,0 +1,24 @@
+name: Dependencies (Retrieve, Metadata, Compile, Test, Create PR)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */12 * * *'  # https://crontab.guru/every-12-hours
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  testing-containers:
+    name: Testing Containers
+    strategy:
+      matrix:
+        image: [ "paketobuildpacks-jammy/build:full", "ubuntu", "alpine", "registry.access.redhat.com/ubi8/ubi" ]
+    runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
+    steps:
+      - name: Print out uname
+        run: uname -a
