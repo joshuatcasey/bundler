@@ -23,7 +23,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Compile
-        uses: joshuatcasey/dependency/actions/compile@main
+        uses: joshuatcasey/bundler/dependency/actions/compile@main
         with:
           version: 2.3.13
           tarball_name: bundler-2.3.13.tgz
