@@ -1,9 +1,7 @@
-name: Dependencies (Retrieve, Metadata, Compile, Test, Create PR)
+name: Testing
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 */12 * * *'  # https://crontab.guru/every-12-hours
   push:
     branches:
       - main
