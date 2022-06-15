@@ -10,11 +10,27 @@ on:
       - main
 
 jobs:
+  get-image-ids:
+    name: Get Image IDs
+    runs-on: ubuntu-latest
+    outputs:
+      image-ids: ${{ steps.get-image-ids.outputs.image-ids }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Get Image IDs
+        id: get-image-ids
+        run: |
+          echo "::set-output name=image-ids::$(jq '.[].image' -r dependency/targets.json)"
+      - name: Print Image IDs '${{ steps.get-image-ids.outputs.image-ids }}'
+        run: echo ${{ steps.get-image-ids.outputs.image-ids }}
   testing-containers:
     name: Testing Containers
+    needs:
+      - get-image-ids
     strategy:
       matrix:
-        image: [ "paketobuildpacks/build:full", "ubuntu", "alpine", "registry.access.redhat.com/ubi8/ubi" ]
+        image: ${{ needs.get-image-ids.outputs.image-ids }}
     runs-on: ubuntu-latest
     container: ${{ matrix.image }}
     steps:

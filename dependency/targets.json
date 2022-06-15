@@ -1,0 +1,21 @@
+{
+  "bionic": {
+    "image": "paketobuildpacks/build:full",
+    "stacks": [
+      "io.paketo.stacks.bionic",
+      "io.paketo.stacks.jammy"
+    ]
+  },
+  "ubuntu": {
+    "image": "ubuntu",
+    "stacks": [
+      "some-ubuntu-stack"
+    ]
+  },
+  "alpine": {
+    "image": "alpine",
+    "stacks": [
+      "some-alpine-stack"
+    ]
+  }
+}
