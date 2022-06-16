@@ -19,19 +19,20 @@ import (
 	"github.com/paketo-buildpacks/packit/vacation"
 )
 
-type DepVersion struct {
-	cargo.ConfigMetadataDependency
-	ReleaseDate *time.Time `json:"release_date,omitempty"`
-}
-
 func main() {
 	version := os.Args[1]
-	output := os.Args[2]
+	id := os.Args[2]
+	name := os.Args[3]
+	output := os.Args[4]
 
 	fmt.Printf("version=%s\n", version)
+	fmt.Printf("id=%s\n", id)
+	fmt.Printf("name=%s\n", name)
 	fmt.Printf("output=%s\n", output)
 
 	dependencyVersion := getDependencyVersion(version)
+	dependencyVersion.ID = id
+	dependencyVersion.Name = name
 	bytes, err := json.Marshal(dependencyVersion)
 	if err != nil {
 		panic(fmt.Errorf("cannot marshal: %w", err))
@@ -45,28 +46,25 @@ func main() {
 	fmt.Println(string(bytes))
 }
 
-func getDependencyVersion(version string) DepVersion {
+func getDependencyVersion(version string) cargo.ConfigMetadataDependency {
 	bundlerReleases := getRubyGemVersions()
 
 	depURL := fmt.Sprintf("https://rubygems.org/downloads/bundler-%s.gem", version)
 	for _, release := range bundlerReleases {
 		if release.Version.String() == version {
-			return DepVersion{
-				ConfigMetadataDependency: cargo.ConfigMetadataDependency{
-					Version:         version,
-					Source:          depURL,
-					SourceSHA256:    release.SHA,
-					DeprecationDate: nil,
-					CPE:             fmt.Sprintf("cpe:2.3:a:bundler:bundler:%s:*:*:*:*:ruby:*:*", version),
-					PURL:            generatePURL("bundler", version, release.SHA, depURL),
-					Licenses:        lookupLicenses(depURL),
-				},
-				ReleaseDate: &release.ReleaseDate,
+			return cargo.ConfigMetadataDependency{
+				Version:         version,
+				Source:          depURL,
+				SourceSHA256:    release.SHA,
+				DeprecationDate: nil,
+				CPE:             fmt.Sprintf("cpe:2.3:a:bundler:bundler:%s:*:*:*:*:ruby:*:*", version),
+				PURL:            generatePURL("bundler", version, release.SHA, depURL),
+				Licenses:        lookupLicenses(depURL),
 			}
 		}
 	}
 
-	return DepVersion{}
+	return cargo.ConfigMetadataDependency{}
 }
 
 type RawBundlerRelease struct {

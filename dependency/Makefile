@@ -10,4 +10,4 @@ retrieve:
 	@./retrieval/retrieve.sh $(buildpackTomlPath) $(output)
 
 metadata:
-	@./metadata/metadata.sh $(version) $(output)
+	@./metadata/metadata.sh $(version) $(id) $(name) $(output)

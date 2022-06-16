@@ -96,6 +96,8 @@ jobs:
         run: |
           make metadata \
             version="${{ matrix.version }}" \
+            id=${{ needs.retrieve.outputs.id }} \
+            name=${{ needs.retrieve.outputs.name }} \
             output="${{ steps.get-metadata-filepath.outputs.metadata-filepath }}"
       - name: Output metadata '${{ steps.get-metadata-filepath.outputs.metadata-filepath }}'
         working-directory: dependency
