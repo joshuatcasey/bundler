@@ -136,7 +136,7 @@ jobs:
       - name: Create matrix.json
         working-directory: "${{ steps.make-outputdir.outputs.outputdir }}"
         run: |
-          echo "${{ toJSON(matrix) }}" > matrix.json
+          echo '${{ toJSON(matrix) }}' > matrix.json
           cat matrix.json
       - name: Compile version ${{ matrix.version }}
         id: compile
