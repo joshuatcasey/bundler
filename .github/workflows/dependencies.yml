@@ -128,10 +128,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Print out matrix things
         run: |
-          echo "version=${{ matrix.version }}"
-          echo "image=${{ matrix.image }}"
-          echo "target=${{ matrix.target }}"
-          echo "stacks=${{ matrix.stacks }}"
+          echo "matrix=${{ matrix }}"
       - name: Prepare '${{ matrix.image }}'
         working-directory: dependency/prepare
         run: ./prepare.sh ${{ matrix.image }}
