@@ -13,12 +13,5 @@
     "stacks": [
       "io.paketo.stacks.jammy"
     ]
-  },
-  {
-    "target": "alpine",
-    "image": "alpine",
-    "stacks": [
-      "some-alpine-stack"
-    ]
   }
 ]
