@@ -124,7 +124,7 @@ jobs:
       - name: Setup tarball name
         id: tarball_name
         run: |
-          echo "::set-output name=tarball_name::$(cat dependency/ID)-${{ matrix.version }}-${{ matrix.os }}"
+          echo "::set-output name=tarball_name::${{ needs.retrieve.outputs.id }}-${{ matrix.version }}-${{ matrix.os }}"
       - name: Prepare '${{ matrix.os }}'
         run: . dependency/prepare/${{ matrix.os }}
       - name: Compile '${{ steps.tarball_name.outputs.tarball_name }}'
@@ -180,7 +180,7 @@ jobs:
         working-directory: libdependency
         run: |
           make assemble \
-            id="$(cat ${{ github.workspace }}/dependency/ID)" \
+            id="${{ needs.retrieve.output.id }}" \
             artifactPath=${{ steps.setup-temp-dir.outputs.artifactPath }} \
             buildpackTomlPath=${{ github.workspace }}/buildpack.toml
       - name: Show git diff
