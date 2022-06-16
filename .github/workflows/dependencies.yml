@@ -154,7 +154,7 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: '${{ needs.retrieve.outputs.id }}-${{ matrix.version }}-${{ matrix.target }}'
+          name: '${{ fromJSON(needs.retrieve.outputs.id) }}-${{ matrix.version }}-${{ matrix.target }}'
           path: '${{ steps.make-outputdir.outputs.outputdir }}/*'
   assemble:
     name: Assemble Metadata information
