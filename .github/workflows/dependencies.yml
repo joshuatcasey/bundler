@@ -124,6 +124,11 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
+      - name: Prepare '${{ matrix.image }}'
+        working-directory: dependency
+        run: |
+          make prepare \
+            image=${{ matrix.image }}
       - name: Get Target
         run: |
           TARGET=$(jq --arg IMAGE "${{ matrix.image }}" '.[] | select(.image == $IMAGE)' dependency/targets.json)
@@ -132,8 +137,6 @@ jobs:
         id: tarball_name
         run: |
           echo "::set-output name=tarball_name::${{ needs.retrieve.outputs.id }}-${{ matrix.version }}-${{ matrix.image }}"
-#      - name: Prepare '${{ matrix.image }}'
-#        run: . dependency/prepare/${{ matrix.image }}
       - name: Compile '${{ steps.tarball_name.outputs.tarball_name }}'
         id: compile
         working-directory: dependency
