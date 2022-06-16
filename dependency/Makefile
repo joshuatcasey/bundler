@@ -7,7 +7,7 @@ test:
 	@./test/test.sh $(tarball_name) $(version)
 
 retrieve:
-	@./retrieval/retrieve.sh
+	@./retrieval/retrieve.sh $(buildpackTomlPath) $(output)
 
 metadata:
 	@./metadata/metadata.sh $(version) $(output)

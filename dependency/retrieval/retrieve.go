@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"path/filepath"
+	"os"
 	"sort"
 
 	"github.com/Masterminds/semver/v3"
+	"github.com/joshuatcasey/bundler/libdependency/common"
 	"github.com/paketo-buildpacks/packit/v2/cargo"
 	"golang.org/x/exp/slices"
 )
@@ -22,20 +23,40 @@ type BundlerRelease struct {
 var id = "bundler"
 
 func main() {
-	config := parseBuildpackToml()
+	buildpackTomlPath := os.Args[1]
+	output := os.Args[2]
+
+	fmt.Printf("buildpackTomlPath=%s\n", buildpackTomlPath)
+	fmt.Printf("output=%s\n", output)
+
+	config := common.ParseBuildpackToml(buildpackTomlPath)
 
 	buildpackVersions := getBuildpackVersions(config)
 	rubyGemVersions := getRubyGemVersions()
 	versionsFilteredByConstraints := filterToConstraints(config, rubyGemVersions)
 	versionsFilteredByPatches := filterToPatches(versionsFilteredByConstraints, config, buildpackVersions)
 
-	if len(versionsFilteredByPatches) > 0 {
-		bytes, err := json.Marshal(versionsFilteredByPatches)
-		if err != nil {
-			return
-		}
-		fmt.Println(string(bytes))
+	if len(versionsFilteredByPatches) < 1 {
+		panic("No versions found")
 	}
+
+	retrievalOutput := common.RetrievalOutput{
+		Versions: versionsFilteredByPatches,
+		ID:       id,
+		Name:     "Bundler",
+	}
+
+	bytes, err := json.Marshal(retrievalOutput)
+	if err != nil {
+		panic(err)
+	}
+
+	err = os.WriteFile(output, bytes, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(bytes))
 }
 
 func filterToPatches(versionsFilteredByConstraints map[string][]*semver.Version, config cargo.Config, buildpackVersions []string) []string {
@@ -99,17 +120,6 @@ func filterToConstraints(config cargo.Config, rubyGemVersions []*semver.Version)
 		}
 	}
 	return newVersions
-}
-
-func parseBuildpackToml() cargo.Config {
-	buildpackTomlPath := filepath.Join("..", "..", "buildpack.toml")
-
-	configParser := cargo.NewBuildpackParser()
-	config, err := configParser.Parse(buildpackTomlPath)
-	if err != nil {
-		panic(fmt.Sprintf("failed to parse %s: %s", buildpackTomlPath, err))
-	}
-	return config
 }
 
 func getRubyGemVersions() []*semver.Version {

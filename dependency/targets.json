@@ -7,7 +7,7 @@
     ]
   },
   "ubuntu": {
-    "image": "ubuntu",
+    "image": "ubuntu:22.04",
     "stacks": [
       "some-ubuntu-stack"
     ]

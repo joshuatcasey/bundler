@@ -8,7 +8,7 @@ readonly PROGDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 function main() {
   pushd "${PROGDIR}" > /dev/null
     go build retrieve.go
-    ./retrieve
+    ./retrieve "${@:-}"
   popd > /dev/null
 }
 
