@@ -118,11 +118,7 @@ jobs:
       matrix:
         image: ${{ fromJSON(needs.get-image-ids.outputs.image-ids) }}
         version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
-        include:
-          - image: paketobuildpacks/build:full
-            target: bionic
-          - image: ubuntu:22.04
-            target: ubuntu
+        include: ${{ fromJSON("[{\"image\":\"paketobuildpacks/build:full\",\"target\":\"bionic\"},{\"image\":\"ubuntu:22.04\",\"target\":\"ubuntu\"}]") }}
     runs-on: ubuntu-latest
     container: ${{ matrix.image }}
     continue-on-error: true
