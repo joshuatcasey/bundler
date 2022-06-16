@@ -16,12 +16,17 @@ import (
 )
 
 type Artifact struct {
+	TarballSHA256 string
 	TarballPath   string
 	Uri           string
-	TarballSHA256 string
-	Os            string
-	Version       string
 	Metadata      *common.DepVersion
+}
+
+type Matrix struct {
+	Image   string   `json:"image"`
+	Version string   `json:"version"`
+	Target  string   `json:"target"`
+	Stacks  []string `json:"stacks"`
 }
 
 func main() {
@@ -45,11 +50,7 @@ func main() {
 	fmt.Println("Found metadata:")
 	printAsJson(versionToMetadata)
 
-	artifacts := findArtifacts(artifactPath, id)
-
-	for i := range artifacts {
-		artifacts[i].Metadata = versionToMetadata[artifacts[i].Version]
-	}
+	artifacts := findArtifacts(artifactPath, id, versionToMetadata)
 
 	fmt.Println("Found artifacts:")
 	printAsJson(artifacts)
@@ -73,10 +74,7 @@ func prepareCommit(artifacts []Artifact, id, buildpackTomlPath string) {
 
 	for _, artifact := range artifacts {
 		dependency := artifact.Metadata.ConfigMetadataDependency
-		dependency.ID = id
 		dependency.URI = artifact.Uri
-		dependency.SHA256 = artifact.TarballSHA256
-		dependency.Stacks = append(dependency.Stacks, artifact.Os)
 		config.Metadata.Dependencies = append(config.Metadata.Dependencies, dependency)
 	}
 
@@ -133,7 +131,7 @@ func printAsJson(item interface{}) {
 	fmt.Println(string(bytes))
 }
 
-func findArtifacts(artifactPath string, id string) []Artifact {
+func findArtifacts(artifactPath string, id string, versionsToMetadata map[string]*common.DepVersion) []Artifact {
 	var artifacts []Artifact
 
 	tarballGlob := filepath.Join(artifactPath, fmt.Sprintf("%s-*", id))
@@ -160,6 +158,7 @@ func findArtifacts(artifactPath string, id string) []Artifact {
 			artifact := Artifact{
 				Uri: "<UNKNOWN>",
 			}
+
 			for _, file := range files {
 				fullpath := filepath.Join(tarball, file.Name())
 				fmt.Printf("  - %s\n", file.Name())
@@ -174,11 +173,18 @@ func findArtifacts(artifactPath string, id string) []Artifact {
 					panic(err)
 				}
 
-				if isOS(file) {
-					artifact.Os = strings.TrimSpace(string(bytes))
-				} else if isVersion(file) {
-					artifact.Version = strings.TrimSpace(string(bytes))
-				} else if isSHA256(file) {
+				if file.Name() == "matrix.json" {
+					var matrix Matrix
+					err = json.Unmarshal(bytes, &matrix)
+					if err != nil {
+						panic(err)
+					}
+
+					artifact.Metadata = versionsToMetadata[matrix.Version]
+					artifact.Metadata.Stacks = matrix.Stacks
+				}
+
+				if isSHA256(file) {
 					artifact.TarballSHA256 = strings.TrimSpace(string(bytes))
 				}
 			}
@@ -189,12 +195,15 @@ func findArtifacts(artifactPath string, id string) []Artifact {
 				fmt.Printf("SHA256 does not match! Expected=%s, Calculated=%s\n", artifact.TarballSHA256, calculatedSHA256)
 				panic("SHA256 does not match!")
 			}
-			artifact.TarballSHA256 = calculatedSHA256
+
+			artifact.Metadata.SHA256 = calculatedSHA256
 
 			if err != nil {
 				panic(err)
 			}
 
+			fmt.Println("-------")
+			fmt.Printf("%v\n", artifact.Metadata.Stacks)
 			artifacts = append(artifacts, artifact)
 		}
 	}
@@ -207,14 +216,6 @@ func isTarball(file os.FileInfo) bool {
 
 func isSHA256(file os.FileInfo) bool {
 	return strings.HasSuffix(file.Name(), ".sha256")
-}
-
-func isOS(file os.FileInfo) bool {
-	return strings.HasSuffix(file.Name(), ".os")
-}
-
-func isVersion(file os.FileInfo) bool {
-	return strings.HasSuffix(file.Name(), ".version")
 }
 
 func prune(buildpackTomlPath string) {
