@@ -7,17 +7,17 @@ readonly PROGDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly NAME="bundler"
 
 function main() {
-  local version tarball_name temp_dir output_dir os
+  local version output_dir target temp_dir tarball_name
   version="${1}"
-  tarball_name="${2}"
-  os="${3}"
+  output_dir="${2}"
+  target="${3}"
 
   echo "version=${version}"
-  echo "tarball_name=${tarball_name}"
-  echo "os=${os}"
+  echo "output_dir=${output_dir}"
+  echo "os=${target}"
 
   temp_dir="$(mktemp -d)"
-  output_dir="$(pwd)"
+  pwd="$(pwd)"
 
   pushd "${temp_dir}" > /dev/null
     unset RUBYOPT; \
@@ -32,13 +32,18 @@ function main() {
     rm -rf "cache/bundler-${version}.gem"
     sed -i.bak 's/#!.*ruby.*/#!\/usr\/bin\/env ruby/g' bin/*
     rm bin/*.bak
-    tar czvf "${output_dir}/${tarball_name}" .
+    tarball_name="bundler-${version}-${target}.tgz"
+
+    if [[ "$output_dir" != /* ]]
+    then
+      output_dir="$pwd/$output_dir"
+    fi
+
+    tar czvf "$output_dir/$tarball_name" .
   popd > /dev/null
 
   pushd "${output_dir}" > /dev/null
     sha256sum "${tarball_name}" > "${tarball_name}.sha256"
-    echo "${version}" > "${tarball_name}.version"
-    echo "${os}" > "${tarball_name}.os"
   popd > /dev/null
 
   rm -rf "${temp_dir}"

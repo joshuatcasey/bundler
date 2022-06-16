@@ -128,7 +128,6 @@ jobs:
         uses: actions/checkout@v2
       - name: Print out matrix things
         run: |
-          echo "target=${{ matrix.target }}"
           echo "${{ toJSON(matrix) }}" > matrix2.json
           cat matrix2.json
       - name: Prepare '${{ matrix.image }}'
@@ -136,23 +135,25 @@ jobs:
         run: ./prepare.sh ${{ matrix.image }}
       - name: Compile '${{ steps.tarball_name.outputs.tarball_name }}'
         id: compile
-        working-directory: dependency
+        working-directory: dependency 
         run: |
+          mkdir -p "${{ matrix.version }}"
           make compile \
             version="${{ matrix.version }}" \
-            tarball_name="${{ steps.tarball_name.outputs.tarball_name }}.tgz" \
-            os="${{ matrix.image }}"
-      - name: Test '${{ steps.tarball_name.outputs.tarball_name }}'
+            output_dir="${{ matrix.version }}"
+            target="${{ matrix.target }}"
+          echo '::set-output tarball_path="${{ matrix.version }}/${{ needs.retrieve.outputs.id }}-${{ matrix.version }}-${{ matrix.target }}.tgz"'
+      - name: Test
         working-directory: dependency
         run: |
           make test \
             version="${{ matrix.version }}" \
-            tarball_name="${{ steps.tarball_name.outputs.tarball_name }}.tgz"
-      - name: Upload '${{ steps.tarball_name.outputs.tarball_name }}'
+            tarball_name="${{ steps.compile.outputs.tarball_path }}"
+      - name: Upload '${{ steps.compile.outputs.tarball_path }}'
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ steps.tarball_name.outputs.tarball_name }}
-          path: 'dependency/${{ steps.tarball_name.outputs.tarball_name }}.tgz*'
+          name: '${{ needs.retrieve.outputs.id }}-${{ matrix.version }}'
+          path: '${{ steps.compile.outputs.tarball_path }}*'
   assemble:
     name: Assemble Metadata information
     needs:
