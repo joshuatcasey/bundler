@@ -70,7 +70,7 @@ jobs:
           VERSIONS="${VERSIONS//$'\n'/'%0A'}"
           VERSIONS="${VERSIONS//$'\r'/'%0D'}"
 
-          echo "::set-output name=new_versions::{VERSIONS}"
+          echo "::set-output name=new_versions::${VERSIONS}"
           echo "::set-output name=id::$(jq '.ID' ${OUTPUT})"
           echo "::set-output name=name::$(jq '.Name' ${OUTPUT})"
       - name: Found '${{ steps.retrieve.outputs.new_versions }}'
