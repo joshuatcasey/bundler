@@ -126,10 +126,6 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Print out matrix things
-        run: |
-          echo "${{ toJSON(matrix) }}" > matrix2.json
-          cat matrix2.json
       - name: Prepare '${{ matrix.image }}'
         working-directory: dependency/prepare
         run: ./prepare.sh ${{ matrix.image }}
@@ -137,6 +133,11 @@ jobs:
         id: make-outputdir
         run: |
           echo "::set-output name=outputdir::$(mktemp -d)"
+      - name: Create matrix.json
+        working-directory: "${{ steps.make-outputdir.outputs.outputdir }}"
+        run: |
+          echo "${{ toJSON(matrix) }}" > matrix.json
+          cat matrix.json
       - name: Compile version ${{ matrix.version }}
         id: compile
         working-directory: dependency
