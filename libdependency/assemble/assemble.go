@@ -180,7 +180,11 @@ func findArtifacts(artifactPath string, id string, versionsToMetadata map[string
 						panic(err)
 					}
 
-					artifact.Metadata = versionsToMetadata[matrix.Version]
+					artifact.Target = matrix.Target
+					// must do this to prevent multiple dependencies with the same
+					// versions from overwriting metadata from the reference
+					metadata := *versionsToMetadata[matrix.Version]
+					artifact.Metadata = &metadata
 					artifact.Metadata.Stacks = matrix.Stacks
 				}
 
@@ -202,8 +206,6 @@ func findArtifacts(artifactPath string, id string, versionsToMetadata map[string
 				panic(err)
 			}
 
-			fmt.Println("-------")
-			fmt.Printf("%v\n", artifact.Metadata.Stacks)
 			artifacts = append(artifacts, artifact)
 		}
 	}
