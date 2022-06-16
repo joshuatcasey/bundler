@@ -14,7 +14,7 @@ function main() {
 
   echo "version=${version}"
   echo "output_dir=${output_dir}"
-  echo "os=${target}"
+  echo "target=${target}"
 
   temp_dir="$(mktemp -d)"
   pwd="$(pwd)"

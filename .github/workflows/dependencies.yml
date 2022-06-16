@@ -133,27 +133,29 @@ jobs:
       - name: Prepare '${{ matrix.image }}'
         working-directory: dependency/prepare
         run: ./prepare.sh ${{ matrix.image }}
+      - name: Make Temporary Artifact Directory
+        id: make-outputdir
+        run: |
+          echo "::set-output name=outputdir::$(mktemp -d)"
       - name: Compile version ${{ matrix.version }}
         id: compile
         working-directory: dependency
         run: |
-          mkdir -p "${{ matrix.version }}"
           make compile \
             version="${{ matrix.version }}" \
-            output_dir="${{ matrix.version }}" \
+            output_dir="${{ steps.make-outputdir.outputs.outputdir }}" \
             target="${{ matrix.target }}"
-          echo "::set-output name=tarball_path::${{ matrix.version }}/${{ needs.retrieve.outputs.id }}-${{ matrix.version }}-${{ matrix.target }}.tgz"
       - name: Test
         working-directory: dependency
         run: |
           make test \
             version="${{ matrix.version }}" \
-            tarball_name="${{ steps.compile.outputs.tarball_path }}"
-      - name: Upload '${{ steps.compile.outputs.tarball_path }}'
+            tarball_name="${{ steps.make-outputdir.outputs.outputdir }}/*.tgz"
+      - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: '${{ needs.retrieve.outputs.id }}-${{ matrix.version }}'
-          path: '${{ steps.compile.outputs.tarball_path }}*'
+          name: '${{ needs.retrieve.outputs.id }}-${{ matrix.version }}-${{ matrix.target }}'
+          path: '${{ steps.make-outputdir.outputs.outputdir }}/*'
   assemble:
     name: Assemble Metadata information
     needs:
