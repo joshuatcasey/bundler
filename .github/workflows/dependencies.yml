@@ -21,34 +21,25 @@ jobs:
       - name: Select Go Version
         id: select-go-version
         run: echo "::set-output name=go-version::>=1.18.0"
-  get-image-ids:
-    name: Get Image IDs
+  get-targets:
+    name: Get Targets
     runs-on: ubuntu-latest
     outputs:
-      image-ids: ${{ steps.get-image-ids.outputs.image-ids }}
-      targets: ${{ steps.get-image-ids.outputs.targets }}
+      targets: ${{ steps.get-targets.outputs.targets }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Get Image IDs
-        id: get-image-ids
+        id: get-targets
         working-directory: dependency
         run: |
-          IMAGE_IDS=$(jq '[.[].image]' -r targets.json)
-          IMAGE_IDS="${IMAGE_IDS//'%'/'%25'}"
-          IMAGE_IDS="${IMAGE_IDS//$'\n'/'%0A'}"
-          IMAGE_IDS="${IMAGE_IDS//$'\r'/'%0D'}"
-          echo "::set-output name=image-ids::${IMAGE_IDS}"
-
           TARGETS=$(cat targets.json)
           TARGETS="${TARGETS//'%'/'%25'}"
           TARGETS="${TARGETS//$'\n'/'%0A'}"
           TARGETS="${TARGETS//$'\r'/'%0D'}"
           echo "::set-output name=targets::${TARGETS}"
-      - name: Print Image IDs
-        run: echo "${{ steps.get-image-ids.outputs.image-ids }}"
       - name: Print Targets
-        run: echo "${{ steps.get-image-ids.outputs.targets }}"
+        run: echo "${{ steps.get-targets.outputs.targets }}"
   retrieve:
     name: Retrieve new versions
     needs:
@@ -123,12 +114,12 @@ jobs:
     name: Compile
     needs:
       - retrieve
-      - get-image-ids
+      - get-targets
     strategy:
       matrix:
-        image: ${{ fromJSON(needs.get-image-ids.outputs.image-ids) }}
+        image: ${{ fromJSON(needs.get-targets.outputs.targets).*.image }}
         version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
-        include: ${{ fromJSON(needs.get-image-ids.outputs.targets) }}
+        include: ${{ fromJSON(needs.get-targets.outputs.targets) }}
     runs-on: ubuntu-latest
     container: ${{ matrix.image }}
     continue-on-error: true
@@ -140,7 +131,7 @@ jobs:
           echo "version=${{ matrix.version }}"
           echo "image=${{ matrix.image }}"
           echo "target=${{ matrix.target }}"
-          echo "stacks=${{ matrix.stacks }}"
+          echo "stacks=${{ fromJSON(matrix.stacks) }}"
       - name: Prepare '${{ matrix.image }}'
         working-directory: dependency/prepare
         run: ./prepare.sh ${{ matrix.image }}
