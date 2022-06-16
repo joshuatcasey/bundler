@@ -11,3 +11,6 @@ retrieve:
 
 metadata:
 	@./metadata/metadata.sh $(version) $(id) $(name) $(output)
+
+prepare:
+	@./prepare/prepare.sh $(image)
