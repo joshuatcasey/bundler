@@ -118,7 +118,8 @@ jobs:
       matrix:
         image: ${{ fromJSON(needs.get-image-ids.outputs.image-ids) }}
         version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
-    runs-on: ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    container: ${{ matrix.image }}
     continue-on-error: true
     steps:
       - name: Check out code
