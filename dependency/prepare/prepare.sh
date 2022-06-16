@@ -1,7 +1,6 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 set -u
-set -o pipefail
 
 image="${1}"
 
@@ -12,12 +11,12 @@ case "${image}" in
 
   "ubuntu:22.04")
     apt-get update
-    apt-get install -y jq ruby-full
+    apt-get install -y jq ruby-full make
     ;;
 
   "alpine")
     apk update
-    apk add jq ruby
+    apk add jq ruby make
     ;;
 
   "macos")
