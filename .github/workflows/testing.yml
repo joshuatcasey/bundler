@@ -10,53 +10,21 @@ on:
       - main
 
 jobs:
-#  matrix-actions:
-#    name: Run matrix actions
-#    runs-on: ubuntu-latest
-#    strategy:
-#      matrix:
-#        image:
-#          - jammy
-#          - bionic
-#          - alpine
-#    steps:
-#      - name: Check out code
-#        uses: actions/checkout@v2
-#      - name: Compile
-#        uses: joshuatcasey/bundler/dependency/actions/compile@main
-#        with:
-#          version: 2.3.13
-#          tarball_name: bundler-2.3.13.tgz
-#          target: ${{ matrix.image }}
-  get-image-ids:
-    name: Get Image IDs
+  matrix-actions:
+    name: Run matrix actions
     runs-on: ubuntu-latest
-    outputs:
-      image-ids: ${{ steps.get-image-ids.outputs.image-ids }}
+    strategy:
+      matrix:
+        image:
+          - jammy
+          - bionic
+          - alpine
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Get Image IDs
-        id: get-image-ids
-        run: |
-          IMAGE_IDS=$(jq '[.[].image]' -r dependency/targets.json)
-          IMAGE_IDS="${IMAGE_IDS//'%'/'%25'}"
-          IMAGE_IDS="${IMAGE_IDS//$'\n'/'%0A'}"
-          IMAGE_IDS="${IMAGE_IDS//$'\r'/'%0D'}"
-          echo "::set-output name=image-ids::${IMAGE_IDS}"
-      - name: Print Image IDs
-        run: echo "${{ steps.get-image-ids.outputs.image-ids }}"
-  testing-containers:
-    name: Testing Containers
-    needs:
-      - get-image-ids
-    strategy:
-      matrix:
-        image: ${{ fromJSON(needs.get-image-ids.outputs.image-ids) }}
-    runs-on: ubuntu-latest
-    container: ${{ matrix.image }}
-    steps:
-      - name: Print out uname for '${{ matrix.image }}'
-        run: uname -a
-      - name: Prepare
-        run: make prepare image=${{ matrix.image }}
+      - name: Compile
+        uses: joshuatcasey/bundler/dependency/actions/compile@main
+        with:
+          version: 2.3.13
+          tarball_name: bundler-2.3.13.tgz
+          target: ${{ matrix.image }}

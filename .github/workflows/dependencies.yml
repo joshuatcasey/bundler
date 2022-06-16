@@ -21,22 +21,24 @@ jobs:
       - name: Select Go Version
         id: select-go-version
         run: echo "::set-output name=go-version::>=1.18.0"
-  get_operating_systems:
-    name: Get Operating Systems
+  get-image-ids:
+    name: Get Image IDs
     runs-on: ubuntu-latest
     outputs:
-      operating_systems: ${{ steps.get_operating_systems.outputs.operating_systems }}
+      image-ids: ${{ steps.get-image-ids.outputs.image-ids }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Get Operating Systems
-        id: get_operating_systems
+      - name: Get Image IDs
+        id: get-image-ids
         run: |
-          operatingSystems=$(cat dependency/operating_systems.json)
-          echo "Found operatingSystems ${operatingSystems}"
-          echo "::set-output name=operating_systems::${operatingSystems}"
-      - name: Found '${{ steps.get_operating_systems.outputs.operating_systems }}'
-        run: echo ${{ steps.get_operating_systems.outputs.operating_systems }}
+          IMAGE_IDS=$(jq '[.[].image]' -r dependency/targets.json)
+          IMAGE_IDS="${IMAGE_IDS//'%'/'%25'}"
+          IMAGE_IDS="${IMAGE_IDS//$'\n'/'%0A'}"
+          IMAGE_IDS="${IMAGE_IDS//$'\r'/'%0D'}"
+          echo "::set-output name=image-ids::${IMAGE_IDS}"
+      - name: Print Image IDs
+        run: echo "${{ steps.get-image-ids.outputs.image-ids }}"
   retrieve:
     name: Retrieve new versions
     needs:
@@ -110,23 +112,27 @@ jobs:
   compile:
     name: Compile
     needs:
-      - get_operating_systems
       - retrieve
+      - get-image-ids
     strategy:
       matrix:
-        os: ${{ fromJSON(needs.get_operating_systems.outputs.operating_systems) }}
+        image: ${{ fromJSON(needs.get-image-ids.outputs.image-ids) }}
         version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.image }}
     continue-on-error: true
     steps:
       - name: Check out code
         uses: actions/checkout@v2
+      - name: Get Target
+        run: |
+          TARGET=$(jq --arg IMAGE "${{ matrix.image }}" '.[] | select(.image == $IMAGE)' ${{ github.workspace }}/dependency/targets.json)
+          echo ${TARGET}
       - name: Setup tarball name
         id: tarball_name
         run: |
-          echo "::set-output name=tarball_name::${{ needs.retrieve.outputs.id }}-${{ matrix.version }}-${{ matrix.os }}"
-      - name: Prepare '${{ matrix.os }}'
-        run: . dependency/prepare/${{ matrix.os }}
+          echo "::set-output name=tarball_name::${{ needs.retrieve.outputs.id }}-${{ matrix.version }}-${{ matrix.image }}"
+      - name: Prepare '${{ matrix.image }}'
+        run: . dependency/prepare/${{ matrix.image }}
       - name: Compile '${{ steps.tarball_name.outputs.tarball_name }}'
         id: compile
         working-directory: dependency
@@ -134,7 +140,7 @@ jobs:
           make compile \
             version="${{ matrix.version }}" \
             tarball_name="${{ steps.tarball_name.outputs.tarball_name }}.tgz" \
-            os="${{ matrix.os }}"
+            os="${{ matrix.image }}"
       - name: Test '${{ steps.tarball_name.outputs.tarball_name }}'
         working-directory: dependency
         run: |

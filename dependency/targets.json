@@ -1,21 +1,24 @@
-{
-  "bionic": {
+[
+  {
+    "target": "bionic",
     "image": "paketobuildpacks/build:full",
     "stacks": [
       "io.paketo.stacks.bionic",
       "io.paketo.stacks.jammy"
     ]
   },
-  "ubuntu": {
+  {
+    "target": "ubuntu",
     "image": "ubuntu:22.04",
     "stacks": [
-      "some-ubuntu-stack"
+      "io.paketo.stacks.jammy"
     ]
   },
-  "alpine": {
+  {
+    "target": "alpine",
     "image": "alpine",
     "stacks": [
       "some-alpine-stack"
     ]
   }
-}
+]
