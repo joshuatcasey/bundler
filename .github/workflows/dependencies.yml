@@ -116,14 +116,23 @@ jobs:
       - get-image-ids
     strategy:
       matrix:
-        image: ${{ fromJSON(needs.get-image-ids.outputs.image-ids) }}
         version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
+        include:
+          - target: bionic
+            image: paketobuildpacks/build:full
+          - target: ubuntu
+            image: ubuntu:22.04
     runs-on: ubuntu-latest
     container: ${{ matrix.image }}
     continue-on-error: true
     steps:
       - name: Check out code
         uses: actions/checkout@v2
+      - name: Print out matrix things
+        run: |
+          echo "version=${{ matrix.version }}"
+          echo "image=${{ matrix.image }}"
+          echo "target=${{ matrix.target }}"
       - name: Prepare '${{ matrix.image }}'
         working-directory: dependency/prepare
         run: ./prepare.sh ${{ matrix.image }}
@@ -134,7 +143,7 @@ jobs:
       - name: Setup tarball name
         id: tarball_name
         run: |
-          echo "::set-output name=tarball_name::${{ needs.retrieve.outputs.id }}-${{ matrix.version }}-${{ matrix.image }}"
+          echo "::set-output name=tarball_name::${{ needs.retrieve.outputs.id }}-${{ matrix.version }}-${{ matrix.target }}"
       - name: Compile '${{ steps.tarball_name.outputs.tarball_name }}'
         id: compile
         working-directory: dependency
