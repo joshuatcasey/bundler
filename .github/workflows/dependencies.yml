@@ -131,7 +131,7 @@ jobs:
           echo "version=${{ matrix.version }}"
           echo "image=${{ matrix.image }}"
           echo "target=${{ matrix.target }}"
-          echo "stacks=${{ fromJSON(matrix.stacks) }}"
+          echo "stacks=${{ matrix.stacks }}"
       - name: Prepare '${{ matrix.image }}'
         working-directory: dependency/prepare
         run: ./prepare.sh ${{ matrix.image }}
