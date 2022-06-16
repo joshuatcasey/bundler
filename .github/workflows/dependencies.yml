@@ -126,7 +126,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Get Target
         run: |
-          TARGET=$(jq --arg IMAGE "${{ matrix.image }}" '.[] | select(.image == $IMAGE)' ${{ github.workspace }}/dependency/targets.json)
+          TARGET=$(jq --arg IMAGE "${{ matrix.image }}" '.[] | select(.image == $IMAGE)' ${{ runner.workspace }}/dependency/targets.json)
           echo ${TARGET}
       - name: Setup tarball name
         id: tarball_name
