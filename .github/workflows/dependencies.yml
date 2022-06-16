@@ -128,7 +128,14 @@ jobs:
         uses: actions/checkout@v2
       - name: Print out matrix things
         run: |
+          echo "AAA"
           echo "matrix=${{ matrix }}"
+          echo "BBB"
+          echo "${{ matrix }}" > matrix1.json
+          cat matrix1.json
+          echo "CCC"
+          echo "${{ toJSON(matrix) }}" > matrix2.json
+          cat matrix2.json
       - name: Prepare '${{ matrix.image }}'
         working-directory: dependency/prepare
         run: ./prepare.sh ${{ matrix.image }}
