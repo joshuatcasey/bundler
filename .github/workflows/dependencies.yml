@@ -26,19 +26,29 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       image-ids: ${{ steps.get-image-ids.outputs.image-ids }}
+      targets: ${{ steps.get-image-ids.outputs.targets }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Get Image IDs
         id: get-image-ids
+        working-directory: dependency
         run: |
-          IMAGE_IDS=$(jq '[.[].image]' -r dependency/targets.json)
+          IMAGE_IDS=$(jq '[.[].image]' -r targets.json)
           IMAGE_IDS="${IMAGE_IDS//'%'/'%25'}"
           IMAGE_IDS="${IMAGE_IDS//$'\n'/'%0A'}"
           IMAGE_IDS="${IMAGE_IDS//$'\r'/'%0D'}"
           echo "::set-output name=image-ids::${IMAGE_IDS}"
+
+          TARGETS=$(cat targets.json)
+          TARGETS="${TARGETS//'%'/'%25'}"
+          TARGETS="${TARGETS//$'\n'/'%0A'}"
+          TARGETS="${TARGETS//$'\r'/'%0D'}"
+          echo "::set-output name=targets::${TARGETS}"
       - name: Print Image IDs
         run: echo "${{ steps.get-image-ids.outputs.image-ids }}"
+      - name: Print Targets
+        run: echo "${{ steps.get-image-ids.outputs.targets }}"
   retrieve:
     name: Retrieve new versions
     needs:
@@ -118,7 +128,7 @@ jobs:
       matrix:
         image: ${{ fromJSON(needs.get-image-ids.outputs.image-ids) }}
         version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
-        include: ${{ fromJSON([{\"image\":\"paketobuildpacks/build:full\",\"target\":\"bionic\"},{\"image\":\"ubuntu:22.04\",\"target\":\"ubuntu\"}]) }}
+        include: ${{ fromJSON(needs.get-image-ids.outputs.targets) }}
     runs-on: ubuntu-latest
     container: ${{ matrix.image }}
     continue-on-error: true
@@ -130,6 +140,7 @@ jobs:
           echo "version=${{ matrix.version }}"
           echo "image=${{ matrix.image }}"
           echo "target=${{ matrix.target }}"
+          echo "stacks=${{ matrix.stacks }}"
       - name: Prepare '${{ matrix.image }}'
         working-directory: dependency/prepare
         run: ./prepare.sh ${{ matrix.image }}
