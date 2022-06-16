@@ -116,12 +116,13 @@ jobs:
       - get-image-ids
     strategy:
       matrix:
+        image: ${{ fromJSON(needs.get-image-ids.outputs.image-ids) }}
         version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
         include:
-          - target: bionic
-            image: paketobuildpacks/build:full
-          - target: ubuntu
-            image: ubuntu:22.04
+          - image: paketobuildpacks/build:full
+            target: bionic
+          - image: ubuntu:22.04
+            target: ubuntu
     runs-on: ubuntu-latest
     container: ${{ matrix.image }}
     continue-on-error: true
