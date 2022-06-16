@@ -142,7 +142,7 @@ jobs:
             version="${{ matrix.version }}" \
             output_dir="${{ matrix.version }}" \
             target="${{ matrix.target }}"
-          echo '::set-output tarball_path="${{ matrix.version }}/${{ needs.retrieve.outputs.id }}-${{ matrix.version }}-${{ matrix.target }}.tgz"'
+          echo "::set-output name=tarball_path::${{ matrix.version }}/${{ needs.retrieve.outputs.id }}-${{ matrix.version }}-${{ matrix.target }}.tgz"
       - name: Test
         working-directory: dependency
         run: |
