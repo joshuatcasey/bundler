@@ -16,10 +16,8 @@ import (
 )
 
 type Artifact struct {
-	TarballSHA256 string
-	TarballPath   string
-	Uri           string
-	Metadata      *common.DepVersion
+	Uri      string
+	Metadata *common.DepVersion
 }
 
 type Matrix struct {
@@ -55,7 +53,7 @@ func main() {
 	fmt.Println("Found artifacts:")
 	printAsJson(artifacts)
 
-	prepareCommit(artifacts, id, buildpackTomlPath)
+	prepareCommit(artifacts, buildpackTomlPath)
 
 	bytes, err := os.ReadFile(buildpackTomlPath)
 	if err != nil {
@@ -69,7 +67,7 @@ func main() {
 	prune(buildpackTomlPath)
 }
 
-func prepareCommit(artifacts []Artifact, id, buildpackTomlPath string) {
+func prepareCommit(artifacts []Artifact, buildpackTomlPath string) {
 	config := common.ParseBuildpackToml(buildpackTomlPath)
 
 	for _, artifact := range artifacts {
@@ -131,10 +129,10 @@ func printAsJson(item interface{}) {
 	fmt.Println(string(bytes))
 }
 
-func findArtifacts(artifactPath string, id string, versionsToMetadata map[string]*common.DepVersion) []Artifact {
+func findArtifacts(artifactDir string, id string, versionsToMetadata map[string]*common.DepVersion) []Artifact {
 	var artifacts []Artifact
 
-	tarballGlob := filepath.Join(artifactPath, fmt.Sprintf("%s-*", id))
+	tarballGlob := filepath.Join(artifactDir, fmt.Sprintf("%s-*", id))
 	if tarballs, err := filepath.Glob(tarballGlob); err != nil {
 		panic(err)
 	} else if len(tarballs) < 1 {
@@ -159,12 +157,15 @@ func findArtifacts(artifactPath string, id string, versionsToMetadata map[string
 				Uri: "<UNKNOWN>",
 			}
 
+			tarballSHA256 := ""
+			tarballPath := ""
+
 			for _, file := range files {
 				fullpath := filepath.Join(tarball, file.Name())
 				fmt.Printf("  - %s\n", file.Name())
 
 				if isTarball(file) {
-					artifact.TarballPath = fullpath
+					tarballPath = fullpath
 					continue
 				}
 
@@ -180,7 +181,6 @@ func findArtifacts(artifactPath string, id string, versionsToMetadata map[string
 						panic(err)
 					}
 
-					artifact.Target = matrix.Target
 					// must do this to prevent multiple dependencies with the same
 					// versions from overwriting metadata from the reference
 					metadata := *versionsToMetadata[matrix.Version]
@@ -189,23 +189,20 @@ func findArtifacts(artifactPath string, id string, versionsToMetadata map[string
 				}
 
 				if isSHA256(file) {
-					artifact.TarballSHA256 = strings.TrimSpace(string(bytes))
+					tarballSHA256 = strings.TrimSpace(string(bytes))
 				}
 			}
 
-			calculatedSHA256, err := fs.NewChecksumCalculator().Sum(artifact.TarballPath)
-			calculatedSHA256 = calculatedSHA256[:64]
-			if !strings.HasPrefix(artifact.TarballSHA256, calculatedSHA256) {
-				fmt.Printf("SHA256 does not match! Expected=%s, Calculated=%s\n", artifact.TarballSHA256, calculatedSHA256)
+			calculatedSHA256, err := fs.NewChecksumCalculator().Sum(tarballPath)
+			if err != nil {
+				panic(err)
+			}
+			if !strings.HasPrefix(tarballSHA256, calculatedSHA256) {
+				fmt.Printf("SHA256 does not match! Expected=%s, Calculated=%s\n", tarballSHA256, calculatedSHA256)
 				panic("SHA256 does not match!")
 			}
 
 			artifact.Metadata.SHA256 = calculatedSHA256
-
-			if err != nil {
-				panic(err)
-			}
-
 			artifacts = append(artifacts, artifact)
 		}
 	}
