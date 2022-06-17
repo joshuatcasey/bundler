@@ -1,0 +1,227 @@
+name: Dependencies (Retrieve, Compile & Test, Create PR)
+
+on:
+  workflow_dispatch:
+  # https://crontab.guru/every-12-hours
+  schedule:
+    - cron: '0 */12 * * *'
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  select-go-version:
+    name: Select Go Version
+    runs-on: ubuntu-latest
+    outputs:
+      go-version: ${{ steps.select-go-version.outputs.go-version }}
+    steps:
+      - name: Select Go Version
+        id: select-go-version
+        run: echo "::set-output name=go-version::>=1.18.0"
+
+  # TODO: what happens when there are no new versions
+  retrieve:
+    name: Retrieve New Versions and Generate Metadata
+    needs:
+      - select-go-version
+    runs-on: ubuntu-latest
+    outputs:
+      metadata: ${{ steps.retrieve.outputs.metadata }}
+      new-versions: ${{ steps.retrieve.outputs.new-versions }}
+      targets: ${{ steps.retrieve.outputs.targets }}
+      len-new-versions: ${{ steps.len-new-versions.outputs.len-new-versions }}
+      id: ${{ steps.retrieve.outputs.id }}
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Setup Go '${{ needs.select-go-version.outputs.go-version }}'
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ needs.select-go-version.outputs.go-version }}
+      - name: Retrieve New Versions and Generate Metadata
+        id: retrieve
+        working-directory: dependency
+        run: |
+          METADATA_FILE="$(mktemp -d)/metadata.json"
+          TARGETS_FILE=$(mktemp)
+
+          make retrieve \
+            buildpack_toml_path="${{ github.workspace }}/buildpack.toml" \
+            metadata_file="${METADATA_FILE}" \
+            targets_file="${TARGETS_FILE}"
+
+          echo "::set-output name=metadata-file::${METADATA_FILE}"
+
+          METADATA=$(cat "${METADATA_FILE}")
+          METADATA="${METADATA//'%'/'%25'}"
+          METADATA="${METADATA//$'\n'/'%0A'}"
+          METADATA="${METADATA//$'\r'/'%0D'}"
+          echo "::set-output name=metadata::${METADATA}"
+
+          NEW_VERSIONS=$(jq '[.[].version]' "${METADATA_FILE}")
+          NEW_VERSIONS="${NEW_VERSIONS//'%'/'%25'}"
+          NEW_VERSIONS="${NEW_VERSIONS//$'\n'/'%0A'}"
+          NEW_VERSIONS="${NEW_VERSIONS//$'\r'/'%0D'}"
+          echo "::set-output name=new-versions::${NEW_VERSIONS}"
+
+          TARGETS=$(cat "${TARGETS_FILE}")
+          TARGETS="${TARGETS//'%'/'%25'}"
+          TARGETS="${TARGETS//$'\n'/'%0A'}"
+          TARGETS="${TARGETS//$'\r'/'%0D'}"
+          echo "::set-output name=targets::${TARGETS}"
+
+          echo "::set-output name=id::$(make id)"
+      - name: List new versions '${{ steps.retrieve.outputs.new-versions }}'
+        run: echo '${{ steps.retrieve.outputs.new-versions }}'
+      - name: Output metadata
+        run: jq '.' ${{ steps.retrieve.outputs.metadata-file }}
+      - name: Get count of new versions
+        id: len-new-versions
+        run: |
+          echo "::set-output name=len-new-versions::$(jq '. | length' ${{ steps.retrieve.outputs.metadata-file }})"
+      - name: Upload metadata
+        uses: actions/upload-artifact@v3
+        with:
+          name: metadata
+          path: ${{ steps.retrieve.outputs.metadata-file }}
+
+  # Check if there is buildpack-provided compilation code and testing code
+  # Optional compilation code expected at: <buildpack>/dependency/actions/compile/
+  # Optional testing code expected at: <buildpack>/dependency/test/
+  get-compile-and-test:
+    name: Get Compilation and Testing Code
+    outputs:
+      should-compile: ${{ steps.compile-check.outputs.should-compile }}
+      should-test: ${{ steps.test-check.outputs.should-test }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Has Compilation Action?
+        id: compile-check
+        run: |
+          if test -d "dependency/actions/compile"; then
+            echo "Compilation action provided"
+            echo "::set-output name=should-compile::true"
+          fi
+
+      - name: Has Testing Action?
+        id: test-check
+        run: |
+          if test -d "dependency/test"; then
+            echo "Testing file provided"
+            echo "::set-output name=should-test::true"
+          fi
+
+  compile:
+    name: Compile and/or Test Dependency
+    needs:
+      - retrieve
+      - get-compile-and-test
+    if: needs.retrieve.outputs.len-new-versions > 0
+    strategy:
+      fail-fast: false
+      matrix:
+        metadata: ${{ fromJSON(needs.retrieve.outputs.metadata) }}
+        target: ${{ fromJSON(needs.retrieve.outputs.targets) }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Make Temporary Artifact Directory
+        id: make-output-dir
+        run: |
+          echo "::set-output name=output-dir::$(mktemp -d)"
+      - name: Output metadata
+        run: |
+          TEMP=$(mktemp)
+          echo '${{ toJSON(matrix.metadata) }}' > "${TEMP}"
+          jq '.' "${TEMP}"
+      # Compile if all the following conditions are met:
+      #   (1) compilation GitHub Action present in the buildpack directory
+      #   (2) SHA256 in metadata.json is empty
+      #   (3) URI in metadata.json is empty
+      - name: Compile version ${{ matrix.metadata.version }} on ${{ matrix.metadata.target }} Dockerfile
+        id: compile
+        if: ${{ needs.get-compile-and-test.outputs.should-compile && matrix.metadata.sha256 == '' && matrix.metadata.uri == '' }}
+        uses: ./dependency/actions/compile
+        with:
+          version: "${{ matrix.metadata.version }}"
+          output-dir: "${{ steps.make-output-dir.outputs.output-dir }}"
+          target: "${{ matrix.target }}"
+      - name: Test
+        if: ${{ needs.get-compile-and-test.outputs.should-test && matrix.metadata.sha256 == '' && matrix.metadata.uri == '' }}
+        working-directory: dependency
+        run: |
+          make test \
+            version="${{ matrix.metadata.version }}" \
+            tarball_name="${{ steps.make-output-dir.outputs.output-dir }}/*.tgz"
+      - name: Add metadata
+        working-directory: ${{ steps.make-output-dir.outputs.output-dir }}
+        run: |
+          echo '${{ toJSON(matrix.metadata) }}' > metadata.json
+          echo '${{ matrix.target }}' > target
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: '${{ needs.retrieve.outputs.id }}-${{ matrix.metadata.version }}-${{ matrix.target }}'
+          path: '${{ steps.make-output-dir.outputs.output-dir }}/*'
+  assemble:
+    name: Assemble Metadata information
+    needs:
+      - retrieve
+      - compile
+      - select-go-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Assemble the Pull Request
+        uses: joshuatcasey/libdependency/actions/assemble@main
+        with:
+          id: ${{ needs.retrieve.outputs.id }}
+          buildpack-toml-path: ${{ github.workspace }}/buildpack.toml
+      - name: Checkout Branch 'automation/dependencies/update'
+        uses: paketo-buildpacks/github-config/actions/pull-request/checkout-branch@main
+        with:
+          branch: automation/dependencies/update
+      - name: Show git diff
+        run: |
+          cat ${{ github.workspace }}/buildpack.toml
+          git diff
+      - name: Commit
+        id: commit
+        uses: paketo-buildpacks/github-config/actions/pull-request/create-commit@main
+        with:
+          message: "Updating buildpack.toml with new versions ${{ needs.retrieve.outputs.new-versions }}"
+          pathspec: "."
+      - name: Push Branch 'automation/dependencies/update'
+        if: ${{ steps.commit.outputs.commit_sha != '' }}
+        uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
+        with:
+          branch: automation/dependencies/update
+  submit-pull-request:
+    name: Submit Pull Request
+    needs:
+      - assemble
+      - retrieve
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          ref: automation/dependencies/update
+      - name: Open Pull Request
+        run: |
+          gh pr create \
+            --title "Updates buildpack.toml with ${{ needs.retrieve.outputs.new-versions }}" \
+            --body "See commit history for details" \
+            --base main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
