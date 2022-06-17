@@ -15,11 +15,6 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type Artifact struct {
-	Uri      string
-	Metadata *common.DepVersion
-}
-
 type Matrix struct {
 	Image   string   `json:"image"`
 	Version string   `json:"version"`
@@ -67,13 +62,11 @@ func main() {
 	prune(buildpackTomlPath)
 }
 
-func prepareCommit(artifacts []Artifact, buildpackTomlPath string) {
+func prepareCommit(artifacts []common.DepVersion, buildpackTomlPath string) {
 	config := common.ParseBuildpackToml(buildpackTomlPath)
 
 	for _, artifact := range artifacts {
-		dependency := artifact.Metadata.ConfigMetadataDependency
-		dependency.URI = artifact.Uri
-		config.Metadata.Dependencies = append(config.Metadata.Dependencies, dependency)
+		config.Metadata.Dependencies = append(config.Metadata.Dependencies, artifact.ConfigMetadataDependency)
 	}
 
 	file, err := os.OpenFile(buildpackTomlPath, os.O_RDWR|os.O_TRUNC, 0600)
@@ -88,8 +81,8 @@ func prepareCommit(artifacts []Artifact, buildpackTomlPath string) {
 	}
 }
 
-func getMetadata(artifactPath string) map[string]*common.DepVersion {
-	versionToMetadata := make(map[string]*common.DepVersion)
+func getMetadata(artifactPath string) map[string]common.DepVersion {
+	versionToMetadata := make(map[string]common.DepVersion)
 	metadataGlob := filepath.Join(artifactPath, "metadata-*.json")
 	if metadataFiles, err := filepath.Glob(metadataGlob); err != nil {
 		panic(err)
@@ -115,7 +108,7 @@ func getMetadata(artifactPath string) map[string]*common.DepVersion {
 				panic(fmt.Errorf("failed to parse metadata file: %w", err))
 			}
 
-			versionToMetadata[version] = &depVersion
+			versionToMetadata[version] = depVersion
 		}
 	}
 	return versionToMetadata
@@ -129,8 +122,8 @@ func printAsJson(item interface{}) {
 	fmt.Println(string(bytes))
 }
 
-func findArtifacts(artifactDir string, id string, versionsToMetadata map[string]*common.DepVersion) []Artifact {
-	var artifacts []Artifact
+func findArtifacts(artifactDir string, id string, versionsToMetadata map[string]common.DepVersion) []common.DepVersion {
+	var artifacts []common.DepVersion
 
 	tarballGlob := filepath.Join(artifactDir, fmt.Sprintf("%s-*", id))
 	if allDirsForArtifacts, err := filepath.Glob(tarballGlob); err != nil {
@@ -152,10 +145,7 @@ func findArtifacts(artifactDir string, id string, versionsToMetadata map[string]
 				panic(err)
 			}
 
-			// TODO: fix unknown to real URI
-			artifact := Artifact{
-				Uri: "<UNKNOWN>",
-			}
+			var artifact common.DepVersion
 
 			tarballSHA256 := ""
 			tarballPath := ""
@@ -181,11 +171,10 @@ func findArtifacts(artifactDir string, id string, versionsToMetadata map[string]
 						panic(err)
 					}
 
-					// must do this to prevent multiple dependencies with the same
-					// versions from overwriting metadata from the reference
-					metadata := *versionsToMetadata[matrix.Version]
-					artifact.Metadata = &metadata
-					artifact.Metadata.Stacks = matrix.Stacks
+					artifact = versionsToMetadata[matrix.Version]
+					// TODO: fix unknown to real URI
+					artifact.URI = "<UNKNOWN>"
+					artifact.Stacks = matrix.Stacks
 				}
 
 				if isSHA256(file) {
@@ -202,7 +191,7 @@ func findArtifacts(artifactDir string, id string, versionsToMetadata map[string]
 				panic("SHA256 does not match!")
 			}
 
-			artifact.Metadata.SHA256 = calculatedSHA256
+			artifact.SHA256 = calculatedSHA256
 			artifacts = append(artifacts, artifact)
 		}
 	}
