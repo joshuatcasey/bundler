@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
-	github.com/joshuatcasey/bundler/libdependency/common v0.0.0-20220614162819-e3d9baac0990
+	github.com/joshuatcasey/bundler/libdependency/common v0.0.0-20220617011817-084165ad5321
 	github.com/paketo-buildpacks/packit/v2 v2.3.0
 	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d
 )

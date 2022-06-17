@@ -62,12 +62,10 @@ func main() {
 	prune(buildpackTomlPath)
 }
 
-func prepareCommit(artifacts []common.DepVersion, buildpackTomlPath string) {
+func prepareCommit(artifacts []cargo.ConfigMetadataDependency, buildpackTomlPath string) {
 	config := common.ParseBuildpackToml(buildpackTomlPath)
 
-	for _, artifact := range artifacts {
-		config.Metadata.Dependencies = append(config.Metadata.Dependencies, artifact.ConfigMetadataDependency)
-	}
+	config.Metadata.Dependencies = append(config.Metadata.Dependencies, artifacts...)
 
 	file, err := os.OpenFile(buildpackTomlPath, os.O_RDWR|os.O_TRUNC, 0600)
 	if err != nil {
@@ -81,8 +79,8 @@ func prepareCommit(artifacts []common.DepVersion, buildpackTomlPath string) {
 	}
 }
 
-func getMetadata(artifactPath string) map[string]common.DepVersion {
-	versionToMetadata := make(map[string]common.DepVersion)
+func getMetadata(artifactPath string) map[string]cargo.ConfigMetadataDependency {
+	versionToMetadata := make(map[string]cargo.ConfigMetadataDependency)
 	metadataGlob := filepath.Join(artifactPath, "metadata-*.json")
 	if metadataFiles, err := filepath.Glob(metadataGlob); err != nil {
 		panic(err)
@@ -96,7 +94,7 @@ func getMetadata(artifactPath string) map[string]common.DepVersion {
 			version := strings.TrimPrefix(filepath.Base(metadata), "metadata-")
 			version = strings.TrimSuffix(version, ".json")
 
-			var depVersion common.DepVersion
+			var depVersion cargo.ConfigMetadataDependency
 
 			metadataContents, err := os.ReadFile(filepath.Join(metadata, filepath.Base(metadata)))
 			if err != nil {
@@ -122,8 +120,8 @@ func printAsJson(item interface{}) {
 	fmt.Println(string(bytes))
 }
 
-func findArtifacts(artifactDir string, id string, versionsToMetadata map[string]common.DepVersion) []common.DepVersion {
-	var artifacts []common.DepVersion
+func findArtifacts(artifactDir string, id string, versionsToMetadata map[string]cargo.ConfigMetadataDependency) []cargo.ConfigMetadataDependency {
+	var artifacts []cargo.ConfigMetadataDependency
 
 	tarballGlob := filepath.Join(artifactDir, fmt.Sprintf("%s-*", id))
 	if allDirsForArtifacts, err := filepath.Glob(tarballGlob); err != nil {
@@ -145,7 +143,7 @@ func findArtifacts(artifactDir string, id string, versionsToMetadata map[string]
 				panic(err)
 			}
 
-			var artifact common.DepVersion
+			var artifact cargo.ConfigMetadataDependency
 
 			tarballSHA256 := ""
 			tarballPath := ""
