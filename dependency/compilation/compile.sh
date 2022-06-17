@@ -17,7 +17,6 @@ function main() {
   echo "target=${target}"
 
   temp_dir="$(mktemp -d)"
-  pwd="$(pwd)"
 
   pushd "${temp_dir}" > /dev/null
     unset RUBYOPT; \
@@ -34,12 +33,7 @@ function main() {
     rm bin/*.bak
     tarball_name="bundler-${version}-${target}.tgz"
 
-    if [[ "$output_dir" != /* ]]
-    then
-      output_dir="$pwd/$output_dir"
-    fi
-
-    tar czvf "$output_dir/$tarball_name" .
+    tar czvf "${output_dir}/${tarball_name}" .
   popd > /dev/null
 
   pushd "${output_dir}" > /dev/null
