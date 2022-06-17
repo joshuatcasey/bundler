@@ -133,16 +133,16 @@ func findArtifacts(artifactDir string, id string, versionsToMetadata map[string]
 	var artifacts []Artifact
 
 	tarballGlob := filepath.Join(artifactDir, fmt.Sprintf("%s-*", id))
-	if tarballs, err := filepath.Glob(tarballGlob); err != nil {
+	if allDirsForArtifacts, err := filepath.Glob(tarballGlob); err != nil {
 		panic(err)
-	} else if len(tarballs) < 1 {
+	} else if len(allDirsForArtifacts) < 1 {
 		panic(fmt.Errorf("no compiled artifact folders found: %s", tarballGlob))
 	} else {
 		fmt.Printf("Found compiled artifact folders:\n")
-		for _, tarball := range tarballs {
-			fmt.Printf("- %s\n", filepath.Base(tarball))
+		for _, singleDirForArtifact := range allDirsForArtifacts {
+			fmt.Printf("- %s\n", filepath.Base(singleDirForArtifact))
 
-			dir, err := os.Open(tarball)
+			dir, err := os.Open(singleDirForArtifact)
 			if err != nil {
 				panic(err)
 			}
@@ -161,7 +161,7 @@ func findArtifacts(artifactDir string, id string, versionsToMetadata map[string]
 			tarballPath := ""
 
 			for _, file := range files {
-				fullpath := filepath.Join(tarball, file.Name())
+				fullpath := filepath.Join(singleDirForArtifact, file.Name())
 				fmt.Printf("  - %s\n", file.Name())
 
 				if isTarball(file) {
