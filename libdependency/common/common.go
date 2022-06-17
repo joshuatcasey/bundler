@@ -2,15 +2,9 @@ package common
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/paketo-buildpacks/packit/v2/cargo"
 )
-
-type DepVersion struct {
-	cargo.ConfigMetadataDependency
-	ReleaseDate *time.Time `json:"release_date,omitempty"`
-}
 
 func ParseBuildpackToml(buildpackTomlPath string) cargo.Config {
 	configParser := cargo.NewBuildpackParser()
