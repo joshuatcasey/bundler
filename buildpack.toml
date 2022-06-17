@@ -32,6 +32,32 @@ api = "0.7"
     version = "1.17.3"
 
   [[metadata.dependencies]]
+    cpe = "cpe:2.3:a:bundler:bundler:2.3.14:*:*:*:*:ruby:*:*"
+    id = "bundler"
+    licenses = ["MIT", "MIT-0"]
+    name = "Bundler"
+    purl = "pkg:generic/bundler@2.3.14?checksum=2fae2925c22ae122b245416484373a139d57a3e123fe9baed98d407384ea803c&download_url=https://rubygems.org/downloads/bundler-2.3.14.gem"
+    sha256 = "fef7bedaf90c846905e201450be8a85a30231897ac2231709b05022160427584"
+    source = "https://rubygems.org/downloads/bundler-2.3.14.gem"
+    source_sha256 = "2fae2925c22ae122b245416484373a139d57a3e123fe9baed98d407384ea803c"
+    stacks = ["io.paketo.stacks.jammy"]
+    uri = "<UNKNOWN>"
+    version = "2.3.14"
+
+  [[metadata.dependencies]]
+    cpe = "cpe:2.3:a:bundler:bundler:2.3.14:*:*:*:*:ruby:*:*"
+    id = "bundler"
+    licenses = ["MIT", "MIT-0"]
+    name = "Bundler"
+    purl = "pkg:generic/bundler@2.3.14?checksum=2fae2925c22ae122b245416484373a139d57a3e123fe9baed98d407384ea803c&download_url=https://rubygems.org/downloads/bundler-2.3.14.gem"
+    sha256 = "954f287597b428c13f251b8c5803bdde906c387ee19905b677a51a1e588524e6"
+    source = "https://rubygems.org/downloads/bundler-2.3.14.gem"
+    source_sha256 = "2fae2925c22ae122b245416484373a139d57a3e123fe9baed98d407384ea803c"
+    stacks = ["io.paketo.stacks.jammy", "io.paketo.stacks.bionic"]
+    uri = "<UNKNOWN>"
+    version = "2.3.14"
+
+  [[metadata.dependencies]]
     cpe = "cpe:2.3:a:bundler:bundler:2.3.15:*:*:*:*:ruby:*:*"
     id = "bundler"
     licenses = ["MIT", "MIT-0"]
