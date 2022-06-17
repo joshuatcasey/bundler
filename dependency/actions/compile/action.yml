@@ -1,0 +1,43 @@
+name: 'Compile Dependency on Target'
+
+description: |
+  Compiles a dependency given a version, output directory, and a target image to compile on
+
+inputs:
+  version:
+    description: 'dependency version'
+    required: true
+  output-dir:
+    description: 'output directory'
+    required: true
+  target:
+    description: 'dependency OS target variant'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+  
+  - name: docker step
+    id: docker-step
+    env:
+      SKIP_LOGIN: true
+    uses: actions-hub/docker/cli@master
+    with:
+      args: "build -t compilation -f dependency/actions/compile/${{ inputs.target }}.Dockerfile dependency/actions/compile"
+
+  - name: docker step two
+    id: docker-step-two
+    uses: actions-hub/docker/cli@master
+    env:
+      SKIP_LOGIN: true
+    with:
+      args: "run -v /home/runner/work/bundler/bundler:/home compilation --version ${{ inputs.version }} --output-dir /home --target ${{ inputs.target }}"
+
+  - name: copy artifacts into output dir
+    shell: bash
+    run: cp -r $GITHUB_WORKSPACE/*.tgz* ${{ inputs.output-dir }}
+
+  - name: print contents of output dir
+    shell: bash
+    run: ls -al ${{ inputs.output-dir }}
