@@ -32,6 +32,7 @@ api = "0.7"
     version = "1.17.3"
 
   [[metadata.dependencies]]
+<<<<<<< HEAD
     cpe = "cpe:2.3:a:bundler:bundler:2.3.20:*:*:*:*:ruby:*:*"
     id = "bundler"
     licenses = ["MIT", "MIT-0"]
@@ -56,16 +57,42 @@ api = "0.7"
     stacks = ["io.buildpacks.stacks.bionic"]
     uri = "https://deps.paketo.io/bundler/bundler_2.3.21_linux_noarch_bionic_1ecadd41.tgz"
     version = "2.3.21"
+=======
+    cpe = "cpe:2.3:a:bundler:bundler:2.3.19:*:*:*:*:ruby:*:*"
+    id = "bundler"
+    licenses = ["MIT", "MIT-0"]
+    name = "Bundler"
+    purl = "pkg:generic/bundler@2.3.19?checksum=bb32b7d2c661f3f2120ee25112d39470f22295a575623782dcbfa32e18a81af1&download_url=https://rubygems.org/downloads/bundler-2.3.19.gem"
+    sha256 = "16548636f68017c738495690b8aad3f027024d1a66ccc1dbb13ac7aa39b748f1"
+    source = "https://rubygems.org/downloads/bundler-2.3.19.gem"
+    source_sha256 = "bb32b7d2c661f3f2120ee25112d39470f22295a575623782dcbfa32e18a81af1"
+    stacks = ["io.buildpacks.stacks.bionic"]
+    uri = "https://deps.paketo.io/bundler/bundler_2.3.19_linux_noarch_bionic_16548636.tgz"
+    version = "2.3.19"
+
+  [[metadata.dependencies]]
+    cpe = "cpe:2.3:a:bundler:bundler:2.3.20:*:*:*:*:ruby:*:*"
+    id = "bundler"
+    licenses = ["MIT", "MIT-0"]
+    name = "Bundler"
+    purl = "pkg:generic/bundler@2.3.20?checksum=809277bc7ceb268e97a474b58b02dbefb8ddf59077f4618b70e2504ab81a047c&download_url=https://rubygems.org/downloads/bundler-2.3.20.gem"
+    sha256 = "bfabce4173b5dc2dbf399d1cd33453790176fb2b3f5da82f25ce77608fd60c81"
+    source = "https://rubygems.org/downloads/bundler-2.3.20.gem"
+    source_sha256 = "809277bc7ceb268e97a474b58b02dbefb8ddf59077f4618b70e2504ab81a047c"
+    stacks = ["io.buildpacks.stacks.bionic"]
+    uri = "https://deps.paketo.io/bundler/bundler_2.3.20_linux_noarch_bionic_bfabce41.tgz"
+    version = "2.3.20"
+>>>>>>> ae3becc (add dependencies workflow)
 
   [[metadata.dependency-constraints]]
     constraint = "1.*.*"
     id = "bundler"
-    patches = 1
+    patches = 2
 
   [[metadata.dependency-constraints]]
     constraint = "2.*.*"
     id = "bundler"
-    patches = 2
+    patches = 3
 
 [[stacks]]
   id = "io.buildpacks.stacks.bionic"
