@@ -25,10 +25,9 @@ func main() {
 	fmt.Printf("output=%s\n", output)
 
 	var id = "bundler"
-	config := common.ParseBuildpackToml(buildpackTomlPath)
 
 	rubyGemVersions := getRubyGemVersions()
-	common.GetNewVersions(id, "Bundler", config, rubyGemVersions, output)
+	common.GetNewVersions(id, "Bundler", buildpackTomlPath, rubyGemVersions, output)
 }
 
 func getRubyGemVersions() []*semver.Version {
