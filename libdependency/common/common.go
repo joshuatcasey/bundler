@@ -3,8 +3,11 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/paketo-buildpacks/packit/v2/cargo"
@@ -26,7 +29,8 @@ type RetrievalOutput struct {
 	Name     string
 }
 
-func GetNewVersions(id, name string, config cargo.Config, allVersions []*semver.Version, output string) {
+func GetNewVersions(id, name string, buildpackTomlPath string, allVersions []*semver.Version, output string) {
+	config := ParseBuildpackToml(buildpackTomlPath)
 	buildpackVersions := GetBuildpackVersions(id, config)
 	versionsFilteredByConstraints := FilterToConstraints(id, config, allVersions)
 	versionsFilteredByPatches := FilterToPatches(versionsFilteredByConstraints, config, buildpackVersions)
@@ -126,4 +130,87 @@ func FilterToConstraints(id string, config cargo.Config, allVersions []*semver.V
 		}
 	}
 	return newVersions
+}
+
+type githubReleaseNamesDTO struct {
+	Name    string `json:"name"`
+	TagName string `json:"tag_name"`
+}
+
+func GetReleasesFromGithub(githubToken, org, repo string) []*semver.Version {
+	client := &http.Client{}
+
+	perPage := 100
+	page := 1
+
+	var allVersions []*semver.Version
+
+	for ; ; page++ {
+		url := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases?per_page=%d&page=%d", org, repo, perPage, page)
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			panic(err)
+		}
+
+		req.Header.Set("Accept", "application/vnd.github.v3+json")
+		if githubToken != "" {
+			req.Header.Set("Authorization", fmt.Sprintf("token %s", githubToken))
+		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			panic(err)
+		}
+
+		body, err := io.ReadAll(res.Body)
+		if err != nil {
+			panic(err)
+		}
+
+		err = res.Body.Close()
+		if err != nil {
+			panic(err)
+		}
+
+		var githubReleaseNames []githubReleaseNamesDTO
+		err = json.Unmarshal(body, &githubReleaseNames)
+		if err != nil {
+			panic(err)
+		}
+
+		for _, release := range githubReleaseNames {
+			allVersions = append(allVersions, sanitizeGithubReleaseName(release))
+		}
+
+		if len(githubReleaseNames) < perPage {
+			break
+		}
+	}
+
+	sort.Slice(allVersions, func(i, j int) bool {
+		return allVersions[i].GreaterThan(allVersions[j])
+	})
+
+	return allVersions
+}
+
+func sanitizeGithubReleaseName(release githubReleaseNamesDTO) *semver.Version {
+	name := strings.TrimSpace(release.Name)
+
+	if strings.HasPrefix(name, "v") {
+		name = strings.TrimPrefix(name, "v")
+	}
+
+	version, err := semver.NewVersion(name)
+	if err == nil {
+		return version
+	}
+
+	name = strings.TrimSpace(release.TagName)
+	if strings.HasPrefix(name, "v") {
+		name = strings.TrimPrefix(name, "v")
+	}
+
+	version, _ = semver.NewVersion(name)
+	return version
 }
