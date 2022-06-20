@@ -1,7 +1,9 @@
 package common
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
 
 	"github.com/Masterminds/semver/v3"
@@ -22,6 +24,34 @@ type RetrievalOutput struct {
 	Versions []string
 	ID       string
 	Name     string
+}
+
+func GetNewVersions(id, name string, config cargo.Config, allVersions []*semver.Version, output string) {
+	buildpackVersions := GetBuildpackVersions(id, config)
+	versionsFilteredByConstraints := FilterToConstraints(id, config, allVersions)
+	versionsFilteredByPatches := FilterToPatches(versionsFilteredByConstraints, config, buildpackVersions)
+
+	if len(versionsFilteredByPatches) < 1 {
+		panic("No versions found")
+	}
+
+	retrievalOutput := RetrievalOutput{
+		Versions: versionsFilteredByPatches,
+		ID:       id,
+		Name:     name,
+	}
+
+	bytes, err := json.Marshal(retrievalOutput)
+	if err != nil {
+		panic(err)
+	}
+
+	err = os.WriteFile(output, bytes, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(bytes))
 }
 
 func GetBuildpackVersions(id string, config cargo.Config) []string {
