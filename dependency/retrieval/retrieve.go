@@ -27,32 +27,8 @@ func main() {
 	var id = "bundler"
 	config := common.ParseBuildpackToml(buildpackTomlPath)
 
-	buildpackVersions := common.GetBuildpackVersions(id, config)
 	rubyGemVersions := getRubyGemVersions()
-	versionsFilteredByConstraints := common.FilterToConstraints(id, config, rubyGemVersions)
-	versionsFilteredByPatches := common.FilterToPatches(versionsFilteredByConstraints, config, buildpackVersions)
-
-	if len(versionsFilteredByPatches) < 1 {
-		panic("No versions found")
-	}
-
-	retrievalOutput := common.RetrievalOutput{
-		Versions: versionsFilteredByPatches,
-		ID:       id,
-		Name:     "Bundler",
-	}
-
-	bytes, err := json.Marshal(retrievalOutput)
-	if err != nil {
-		panic(err)
-	}
-
-	err = os.WriteFile(output, bytes, os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println(string(bytes))
+	common.GetNewVersions(id, "Bundler", config, rubyGemVersions, output)
 }
 
 func getRubyGemVersions() []*semver.Version {

@@ -1243,6 +1243,8 @@ github.com/joshuatcasey/bundler/libdependency/common v0.0.0-20220615212510-d0acf
 github.com/joshuatcasey/bundler/libdependency/common v0.0.0-20220615212510-d0acf95765c6/go.mod h1:qAr9JDnPSg9ieX8XUC1a7BepOmO6WChYLqdm3p/MkR8=
 github.com/joshuatcasey/bundler/libdependency/common v0.0.0-20220620022427-bf2640269310 h1:KR65VIsixHOg/Ma5D0qS0+Y9+1ktbXyifSWDob3tqs0=
 github.com/joshuatcasey/bundler/libdependency/common v0.0.0-20220620022427-bf2640269310/go.mod h1:Pb0JOEWPDlrHxNud4WiZDjg/j0RymmgCeLylroMqZ14=
+github.com/joshuatcasey/bundler/libdependency/common v0.0.0-20220620022858-a31f547b6835 h1:bYFILqeKA4SkSgFW45OTj2b0a3jroNVDQTeRllkO8OI=
+github.com/joshuatcasey/bundler/libdependency/common v0.0.0-20220620022858-a31f547b6835/go.mod h1:Pb0JOEWPDlrHxNud4WiZDjg/j0RymmgCeLylroMqZ14=
 github.com/jpillora/backoff v0.0.0-20180909062703-3050d21c67d7/go.mod h1:2iMrUgbbvHEiQClaW2NsSzMyGHqN+rDFqY705q49KG0=
 github.com/jpillora/backoff v1.0.0/go.mod h1:J/6gKK9jxlEcS3zixgDgUAsiuZ7yrSoa/FX5e0EB2j4=
 github.com/json-iterator/go v1.1.6/go.mod h1:+SdeFBvtyEkXs7REEP0seUULqWtbJapLOCVDaaPEHmU=
