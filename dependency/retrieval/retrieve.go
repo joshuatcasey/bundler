@@ -20,8 +20,6 @@ type BundlerRelease struct {
 	SHA     string `json:"sha"`
 }
 
-var id = "bundler"
-
 func main() {
 	buildpackTomlPath := os.Args[1]
 	output := os.Args[2]
@@ -29,11 +27,12 @@ func main() {
 	fmt.Printf("buildpackTomlPath=%s\n", buildpackTomlPath)
 	fmt.Printf("output=%s\n", output)
 
+	var id = "bundler"
 	config := common.ParseBuildpackToml(buildpackTomlPath)
 
-	buildpackVersions := getBuildpackVersions(config)
+	buildpackVersions := getBuildpackVersions(id, config)
 	rubyGemVersions := getRubyGemVersions()
-	versionsFilteredByConstraints := filterToConstraints(config, rubyGemVersions)
+	versionsFilteredByConstraints := filterToConstraints(id, config, rubyGemVersions)
 	versionsFilteredByPatches := filterToPatches(versionsFilteredByConstraints, config, buildpackVersions)
 
 	if len(versionsFilteredByPatches) < 1 {
@@ -97,7 +96,7 @@ func filterToPatches(versionsFilteredByConstraints map[string][]*semver.Version,
 	return versionsAsStrings
 }
 
-func filterToConstraints(config cargo.Config, rubyGemVersions []*semver.Version) map[string][]*semver.Version {
+func filterToConstraints(id string, config cargo.Config, allVersions []*semver.Version) map[string][]*semver.Version {
 	semverConstraints := make(map[string]*semver.Constraints)
 	for _, constraint := range config.Metadata.DependencyConstraints {
 		if constraint.ID != id {
@@ -112,7 +111,7 @@ func filterToConstraints(config cargo.Config, rubyGemVersions []*semver.Version)
 	}
 
 	newVersions := make(map[string][]*semver.Version)
-	for _, version := range rubyGemVersions {
+	for _, version := range allVersions {
 		for constraintId, constraint := range semverConstraints {
 			if constraint.Check(version) {
 				newVersions[constraintId] = append(newVersions[constraintId], version)
@@ -152,7 +151,7 @@ func getRubyGemVersions() []*semver.Version {
 	return rubyGemVersions
 }
 
-func getBuildpackVersions(config cargo.Config) []string {
+func getBuildpackVersions(id string, config cargo.Config) []string {
 	var buildpackVersions []string
 	for _, d := range config.Metadata.Dependencies {
 		if d.ID != id {
