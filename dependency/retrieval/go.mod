@@ -4,11 +4,9 @@ go 1.18
 
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
+	github.com/joshuatcasey/bundler/libdependency/common v0.0.0-20220620022427-bf2640269310
 	github.com/paketo-buildpacks/packit/v2 v2.3.0
-	golang.org/x/exp v0.0.0-20220608143224-64259d1afd70
-	github.com/joshuatcasey/bundler/libdependency/common v0.0.0-20220615212510-d0acf95765c6
+	golang.org/x/exp v0.0.0-20220613132600-b0d781184e0d
 )
 
-require (
-	github.com/BurntSushi/toml v1.1.0 // indirect
-)
+require github.com/BurntSushi/toml v1.1.0 // indirect
