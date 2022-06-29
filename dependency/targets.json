@@ -3,12 +3,11 @@
     "target": "bionic",
     "image": "paketobuildpacks/build:full",
     "stacks": [
-      "io.paketo.stacks.bionic",
-      "io.paketo.stacks.jammy"
+      "io.paketo.stacks.bionic"
     ]
   },
   {
-    "target": "ubuntu",
+    "target": "jammy",
     "image": "ubuntu:22.04",
     "stacks": [
       "io.paketo.stacks.jammy"
