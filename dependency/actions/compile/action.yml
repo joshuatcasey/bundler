@@ -15,12 +15,29 @@ inputs:
     required: true
 
 runs:
-  using: 'docker'
-  image: '${{ inputs.target }}.Dockerfile'
-  args:
-  - "--version"
-  - ${{ inputs.version }}
-  - "--outputDir"
-  - ${{ inputs.outputDir }}
-  - "--target"
-  - ${{ inputs.target }}
+  using: 'composite'
+  steps:
+  
+  - name: docker step
+    id: docker-step
+    env:
+      SKIP_LOGIN: true
+    uses: actions-hub/docker/cli@master
+    with:
+      args: "build -t compilation -f dependency/actions/compile/${{ inputs.target }}.Dockerfile dependency/actions/compile"
+
+  - name: docker step two
+    id: docker-step-two
+    uses: actions-hub/docker/cli@master
+    env:
+      SKIP_LOGIN: true
+    with:
+      args: "run -v /home/runner/work/bundler/bundler:/home compilation --version ${{ inputs.version }} --outputDir /home --target ${{ inputs.target }}"
+
+  - name: copy artifacts into output dir
+    shell: bash
+    run: cp -r $GITHUB_WORKSPACE/*.tgz* ${{ inputs.outputDir }}
+
+  - name: print contents of temp dir 
+    shell: bash
+    run: ls -al ${{ inputs.outputDir }}

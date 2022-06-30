@@ -121,7 +121,6 @@ jobs:
         version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
         include: ${{ fromJSON(needs.get-targets.outputs.targets) }}
     runs-on: ubuntu-latest
-    container: ${{ matrix.image }}
     continue-on-error: true
     steps:
       - name: Check out code
