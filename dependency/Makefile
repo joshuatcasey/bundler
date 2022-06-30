@@ -1,8 +1,4 @@
-.PHONY: compile test retrieve metadata
-
-compile:
-	# @./compilation/compile.sh $(version) $(tarball_name) $(os)
-	@./compilation/compile.sh $(version) $(output_dir) $(target)
+.PHONY: test retrieve metadata
 
 test:
 	@./test/test.sh $(tarball_name) $(version)
