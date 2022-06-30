@@ -126,9 +126,6 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Prepare '${{ matrix.image }}'
-        working-directory: dependency/prepare
-        run: ./prepare.sh ${{ matrix.image }}
       - name: Make Temporary Artifact Directory
         id: make-outputdir
         run: |
@@ -140,12 +137,11 @@ jobs:
           cat matrix.json
       - name: Compile version ${{ matrix.version }}
         id: compile
-        working-directory: dependency
-        run: |
-          make compile \
-            version="${{ matrix.version }}" \
-            output_dir="${{ steps.make-outputdir.outputs.outputdir }}" \
-            target="${{ matrix.target }}"
+        uses: joshuatcasey/bundler/dependency/actions/compile@main
+        with:
+          version: "${{ matrix.version }}"
+          outputDir: "${{ steps.make-outputdir.outputs.outputdir }}"
+          target: "${{ matrix.target }}"
       - name: Test
         working-directory: dependency
         run: |
