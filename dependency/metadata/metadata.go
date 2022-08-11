@@ -20,24 +20,28 @@ import (
 )
 
 func main() {
-	version := os.Args[1]
-	id := os.Args[2]
-	name := os.Args[3]
-	output := os.Args[4]
+	id := os.Args[1]
+	name := os.Args[2]
+	output := os.Args[3]
+	versions := os.Args[4:len(os.Args)]
 
-	fmt.Printf("version=%s\n", version)
+	fmt.Printf("versions=%s\n", versions)
 	fmt.Printf("id=%s\n", id)
 	fmt.Printf("name=%s\n", name)
 	fmt.Printf("output=%s\n", output)
 
-	dependencyVersion := getDependencyVersion(version)
-	dependencyVersion.ID = id
-	dependencyVersion.Name = name
-	bytes, err := json.Marshal(dependencyVersion)
+	allDependencies := []cargo.ConfigMetadataDependency{}
+	for i := range versions {
+		dependencyVersion := getDependencyVersion(versions[i])
+		dependencyVersion.ID = id
+		dependencyVersion.Name = name
+		allDependencies = append(allDependencies, dependencyVersion)
+	}
+
+	bytes, err := json.Marshal(allDependencies)
 	if err != nil {
 		panic(fmt.Errorf("cannot marshal: %w", err))
 	}
-
 	err = os.WriteFile(output, bytes, os.ModePerm)
 	if err != nil {
 		panic(fmt.Errorf("cannot write to %s: %w", output, err))

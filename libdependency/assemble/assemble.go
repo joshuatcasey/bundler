@@ -45,9 +45,6 @@ func main() {
 
 	artifacts := findArtifacts(artifactPath, id, versionToMetadata)
 
-	fmt.Println("Found artifacts:")
-	printAsJson(artifacts)
-
 	prepareCommit(artifacts, buildpackTomlPath)
 
 	bytes, err := os.ReadFile(buildpackTomlPath)
@@ -81,32 +78,29 @@ func prepareCommit(artifacts []cargo.ConfigMetadataDependency, buildpackTomlPath
 
 func getMetadata(artifactPath string) map[string]cargo.ConfigMetadataDependency {
 	versionToMetadata := make(map[string]cargo.ConfigMetadataDependency)
-	metadataGlob := filepath.Join(artifactPath, "metadata-*.json")
-	if metadataFiles, err := filepath.Glob(metadataGlob); err != nil {
+	if metadataFiles, err := filepath.Glob(artifactPath); err != nil {
 		panic(err)
 	} else if len(metadataFiles) < 1 {
-		panic(fmt.Errorf("no metadata files found: %s", metadataGlob))
+		panic(fmt.Errorf("no metadata files found: %s", artifactPath))
 	} else {
 		fmt.Printf("Found metadata files:\n")
 		for _, metadata := range metadataFiles {
-			fmt.Printf("- %s\n", filepath.Base(metadata))
+			var deps []cargo.ConfigMetadataDependency
 
-			version := strings.TrimPrefix(filepath.Base(metadata), "metadata-")
-			version = strings.TrimSuffix(version, ".json")
-
-			var depVersion cargo.ConfigMetadataDependency
-
-			metadataContents, err := os.ReadFile(filepath.Join(metadata, filepath.Base(metadata)))
+			metadataContents, err := os.ReadFile(metadata)
 			if err != nil {
 				panic(err)
 			}
 
-			err = json.Unmarshal(metadataContents, &depVersion)
+			err = json.Unmarshal(metadataContents, &deps)
 			if err != nil {
 				panic(fmt.Errorf("failed to parse metadata file: %w", err))
 			}
 
-			versionToMetadata[version] = depVersion
+			for _, dep := range deps {
+				versionToMetadata[fmt.Sprintf("%s-%s", dep.Version, dep.Target)] = dep
+			}
+
 		}
 	}
 	return versionToMetadata
@@ -123,76 +117,81 @@ func printAsJson(item interface{}) {
 func findArtifacts(artifactDir string, id string, versionsToMetadata map[string]cargo.ConfigMetadataDependency) []cargo.ConfigMetadataDependency {
 	var artifacts []cargo.ConfigMetadataDependency
 
-	tarballGlob := filepath.Join(artifactDir, fmt.Sprintf("%s-*", id))
-	if allDirsForArtifacts, err := filepath.Glob(tarballGlob); err != nil {
-		panic(err)
-	} else if len(allDirsForArtifacts) < 1 {
-		panic(fmt.Errorf("no compiled artifact folders found: %s", tarballGlob))
-	} else {
-		fmt.Printf("Found compiled artifact folders:\n")
-		for _, singleDirForArtifact := range allDirsForArtifacts {
-			fmt.Printf("- %s\n", filepath.Base(singleDirForArtifact))
-
-			dir, err := os.Open(singleDirForArtifact)
-			if err != nil {
-				panic(err)
-			}
-
-			files, err := dir.Readdir(0)
-			if err != nil {
-				panic(err)
-			}
-
-			var artifact cargo.ConfigMetadataDependency
-
-			tarballSHA256 := ""
-			tarballPath := ""
-
-			for _, file := range files {
-				fullpath := filepath.Join(singleDirForArtifact, file.Name())
-				fmt.Printf("  - %s\n", file.Name())
-
-				if isTarball(file) {
-					tarballPath = fullpath
-					continue
-				}
-
-				bytes, err := os.ReadFile(fullpath)
-				if err != nil {
-					panic(err)
-				}
-
-				if file.Name() == "matrix.json" {
-					var matrix Matrix
-					err = json.Unmarshal(bytes, &matrix)
-					if err != nil {
-						panic(err)
-					}
-
-					artifact = versionsToMetadata[matrix.Version]
-					// TODO: fix unknown to real URI
-					artifact.URI = "<UNKNOWN>"
-					artifact.Stacks = matrix.Stacks
-				}
-
-				if isSHA256(file) {
-					tarballSHA256 = strings.TrimSpace(string(bytes))
-				}
-			}
-
-			calculatedSHA256, err := fs.NewChecksumCalculator().Sum(tarballPath)
-			if err != nil {
-				panic(err)
-			}
-			if !strings.HasPrefix(tarballSHA256, calculatedSHA256) {
-				fmt.Printf("SHA256 does not match! Expected=%s, Calculated=%s\n", tarballSHA256, calculatedSHA256)
-				panic("SHA256 does not match!")
-			}
-
-			artifact.SHA256 = calculatedSHA256
-			artifacts = append(artifacts, artifact)
-		}
+	for _, v := range versionsToMetadata {
+		// fmt.Println(k)
+		artifacts = append(artifacts, v)
 	}
+
+	// tarballGlob := filepath.Join(artifactDir, fmt.Sprintf("%s-*", id))
+	// if allDirsForArtifacts, err := filepath.Glob(tarballGlob); err != nil {
+	// 	panic(err)
+	// } else if len(allDirsForArtifacts) < 1 {
+	// panic(fmt.Errorf("no compiled artifact folders found: %s", tarballGlob))
+	// } else {
+	// fmt.Printf("Found compiled artifact folders:\n")
+	// for _, singleDirForArtifact := range allDirsForArtifacts {
+	// 	fmt.Printf("- %s\n", filepath.Base(singleDirForArtifact))
+
+	// 	dir, err := os.Open(singleDirForArtifact)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+
+	// 	files, err := dir.Readdir(0)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+
+	// 	var artifact cargo.ConfigMetadataDependency
+
+	// 	tarballSHA256 := ""
+	// 	tarballPath := ""
+
+	// for _, file := range files {
+	// 	fullpath := filepath.Join(singleDirForArtifact, file.Name())
+	// 	fmt.Printf("  - %s\n", file.Name())
+
+	// 	if isTarball(file) {
+	// 		tarballPath = fullpath
+	// 		continue
+	// 	}
+
+	// 	bytes, err := os.ReadFile(fullpath)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+
+	// 	// if file.Name() == "matrix.json" {
+	// 	// 	var matrix Matrix
+	// 	// 	err = json.Unmarshal(bytes, &matrix)
+	// 	// 	if err != nil {
+	// 	// 		panic(err)
+	// 	// 	}
+
+	// 	// 	artifact = versionsToMetadata[matrix.Version]
+	// 	// 	// TODO: fix unknown to real URI
+	// 	// 	artifact.URI = "<UNKNOWN>"
+	// 	// 	artifact.Stacks = matrix.Stacks
+	// 	// }
+
+	// 	// if isSHA256(file) {
+	// 	// 	tarballSHA256 = strings.TrimSpace(string(bytes))
+	// 	// }
+	// }
+
+	// calculatedSHA256, err := fs.NewChecksumCalculator().Sum(tarballPath)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// if !strings.HasPrefix(tarballSHA256, calculatedSHA256) {
+	// 	fmt.Printf("SHA256 does not match! Expected=%s, Calculated=%s\n", tarballSHA256, calculatedSHA256)
+	// 	panic("SHA256 does not match!")
+	// }
+
+	// artifact.SHA256 = calculatedSHA256
+	// artifacts = append(artifacts, artifact)
+	// }
+	// }
 	return artifacts
 }
 
