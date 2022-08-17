@@ -7,12 +7,12 @@ image="${1}"
 
 case "${image}" in
   "paketobuildpacks/build:full")
-    echo "no preparation neeeded"
+    echo "no preparation needed"
     ;;
 
   "ubuntu:22.04")
     apt-get update
-    apt-get install -y jq ruby-full make
+    apt-get install -y jq ruby-full make wget
     ;;
 
   "macos")
@@ -20,6 +20,6 @@ case "${image}" in
     ;;
 
   *)
-    echo "no preparation neeeded"
+    echo "no preparation needed"
     ;;
 esac
