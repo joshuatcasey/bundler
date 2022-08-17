@@ -50,11 +50,8 @@ func main() {
 	fmt.Printf("generating metadata for %v", versionsFilteredByPatches)
 	allDependencies := []cargo.ConfigMetadataDependency{}
 	for _, version := range versionsFilteredByPatches {
-		dependencyVersion := getDependencyVersion(version)
-		dependencyVersion.ID = "bundler"
-		dependencyVersion.Name = "Bundler"
-		dependencyVersion.Stacks = []string{"bionic", "jammy"}
-		allDependencies = append(allDependencies, dependencyVersion)
+		dependencyVersions := getDependencyVersion(version)
+		allDependencies = append(allDependencies, dependencyVersions...)
 	}
 
 	bytes, err := json.Marshal(allDependencies)
@@ -173,25 +170,32 @@ func getBuildpackVersions(config cargo.Config) []string {
 	return buildpackVersions
 }
 
-func getDependencyVersion(version string) cargo.ConfigMetadataDependency {
+func getDependencyVersion(version string) []cargo.ConfigMetadataDependency {
 	bundlerReleases := getPrettyRubyGemVersions()
+	targets := map[string][]string{"bionic": []string{"io.buildpacks.stacks.bionic"}, "jammy": []string{"io.buildpacks.stacks.jammy"}}
+	dependencies := []cargo.ConfigMetadataDependency{}
 
 	depURL := fmt.Sprintf("https://rubygems.org/downloads/bundler-%s.gem", version)
 	for _, release := range bundlerReleases {
 		if release.Version.String() == version {
-			return cargo.ConfigMetadataDependency{
-				Version:         version,
-				Source:          depURL,
-				SourceSHA256:    release.SHA,
-				DeprecationDate: nil,
-				CPE:             fmt.Sprintf("cpe:2.3:a:bundler:bundler:%s:*:*:*:*:ruby:*:*", version),
-				PURL:            generatePURL("bundler", version, release.SHA, depURL),
-				Licenses:        lookupLicenses(depURL),
+			for _, stacks := range targets {
+				dependencies = append(dependencies,
+					cargo.ConfigMetadataDependency{
+						Version:         version,
+						ID:              "bundler",
+						Name:            "Bundler",
+						Source:          depURL,
+						SourceSHA256:    release.SHA,
+						DeprecationDate: nil,
+						CPE:             fmt.Sprintf("cpe:2.3:a:bundler:bundler:%s:*:*:*:*:ruby:*:*", version),
+						PURL:            generatePURL("bundler", version, release.SHA, depURL),
+						Licenses:        lookupLicenses(depURL),
+						Stacks:          stacks,
+					})
 			}
 		}
 	}
-
-	return cargo.ConfigMetadataDependency{}
+	return dependencies
 }
 
 type RawBundlerRelease struct {
