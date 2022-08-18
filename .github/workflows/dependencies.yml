@@ -99,10 +99,15 @@ jobs:
       - name: Parse matrix
         id: parse-matrix
         run: |
-          echo "::set-output name=version::$(echo '${{ toJSON(matrix.version) }}' | jq -r .version)"
-          echo "::set-output name=target::$(echo '${{ toJSON(matrix.version) }}' | jq -r .target)"
-          echo "::set-output name=sha256::$(echo '${{ toJSON(matrix.version) }}' | jq -r .sha256)"
-          echo "::set-output name=uri::$(echo '${{ toJSON(matrix.version) }}' | jq -r .uri)"
+          jsonContent='${{ toJSON(matrix.version) }}'
+          echo "::set-output name=version::$(echo $jsonContent | jq -r .version)"
+          echo "::set-output name=target::$(echo $jsonContent | jq -r .target)"
+          if [[ $(echo $jsonContent | jq -r .sha256) != null ]]; then
+            echo "::set-output name=sha256::$(echo $jsonContent | jq -r .sha256)"
+          fi
+          if [[ $(echo $jsonContent | jq -r .uri) != null ]]; then
+            echo "::set-output name=uri::$(echo $jsonContent | jq -r .uri)"
+          fi
       - name: print matric elements
         run: |
           echo ${{ steps.parse-matrix.outputs.version }}
@@ -111,7 +116,7 @@ jobs:
           echo ${{ steps.parse-matrix.outputs.uri }}
       - name: Compile version ${{ steps.parse-matrix.outputs.version }} on ${{ steps.parse-matrix.outputs.target }} Dockerfile
         id: compile
-        if: ${{ steps.parse-matrix.outputs.sha256 == null && steps.parse-matrix.outputs.uri == null }}
+        if: ${{ steps.parse-matrix.outputs.sha256 == '' && steps.parse-matrix.outputs.uri == '' }}
         uses: ./dependency/actions/compile
         with:
           version: "${{ steps.parse-matrix.outputs.version }}"
