@@ -110,11 +110,6 @@ jobs:
         id: make-outputdir
         run: |
           echo "::set-output name=outputdir::$(mktemp -d)"
-      # - name: Create matrix.json
-      #   working-directory: "${{ steps.make-outputdir.outputs.outputdir }}"
-      #   run: |
-      #     echo '${{ toJSON(matrix) }}'
-      #     echo '${{ toJSON(matrix).version }}'
       - name: Parse version and target from matrix 
         id: parse-matrix
         run: |
@@ -123,21 +118,22 @@ jobs:
       - name: Compile version ${{ steps.parse-matrix.outputs.version }} on ${{ steps.parse-matrix.outputs.target }} Dockerfile
         id: compile
         # TODO make this a local path
-        uses: joshuatcasey/bundler/dependency/actions/compile@sophie-experiment
+        uses: ./dependency/actions/compile
         with:
           version: "${{ steps.parse-matrix.outputs.version }}"
           outputDir: "${{ steps.make-outputdir.outputs.outputdir }}"
           target: "${{ steps.parse-matrix.outputs.target }}"
-      # - name: Test
-      #   working-directory: dependency
-      #   run: |
-      #     make test \
-      #       version="${{ matrix.version }}" \
-      #       tarball_name="${{ steps.make-outputdir.outputs.outputdir }}/*.tgz"
+      - name: Test
+        working-directory: dependency
+        run: |
+         #TODO: if there is a test
+          make test \
+            version="${{ steps.parse-matrix.outputs.version }}" \
+            tarballPath="${{ steps.make-outputdir.outputs.outputdir }}/*.tgz"
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: '${{ needs.retrieve.outputs.id }}-${{ matrix.version }}-${{ matrix.target }}'
+          name: '${{ needs.retrieve.outputs.id }}-${{ steps.parse-matrix.outputs.version }}-${{ steps.parse-matrix.outputs.target }}'
           path: '${{ steps.make-outputdir.outputs.outputdir }}/*'
   # assemble:
   #   name: Assemble Metadata information
