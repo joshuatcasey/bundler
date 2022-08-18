@@ -90,20 +90,28 @@ jobs:
     if: ${{ needs.get-action.outputs.should-compile == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Parse matrix
-        id: parse-matrix
-        run: |
-          echo "::set-output name=version::$(echo '${{ toJSON(matrix.version) }}' | jq -r .version)"
-          echo "::set-output name=target::$(echo '${{ toJSON(matrix.version) }}' | jq -r .target)"
       - name: Check out code
         uses: actions/checkout@v2
       - name: Make Temporary Artifact Directory
         id: make-outputdir
         run: |
           echo "::set-output name=outputdir::$(mktemp -d)"
+      - name: Parse matrix
+        id: parse-matrix
+        run: |
+          echo "::set-output name=version::$(echo '${{ toJSON(matrix.version) }}' | jq -r .version)"
+          echo "::set-output name=target::$(echo '${{ toJSON(matrix.version) }}' | jq -r .target)"
+          echo "::set-output name=sha256::$(echo '${{ toJSON(matrix.version) }}' | jq -r .sha256)"
+          echo "::set-output name=uri::$(echo '${{ toJSON(matrix.version) }}' | jq -r .uri)"
+      - name: print matric elements
+        run: |
+          echo ${{ steps.parse-matrix.outputs.version }}
+          echo ${{ steps.parse-matrix.outputs.target }}
+          echo ${{ steps.parse-matrix.outputs.sha256 }}
+          echo ${{ steps.parse-matrix.outputs.uri }}
       - name: Compile version ${{ steps.parse-matrix.outputs.version }} on ${{ steps.parse-matrix.outputs.target }} Dockerfile
         id: compile
-        # if: ${{ steps.parse-matrix.outputs.sha256 == '' && steps.parse-matrix.outputs.uri == '' }}
+        if: ${{ steps.parse-matrix.outputs.sha256 != null }}
         uses: ./dependency/actions/compile
         with:
           version: "${{ steps.parse-matrix.outputs.version }}"
