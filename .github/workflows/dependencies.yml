@@ -77,8 +77,11 @@ jobs:
         run: |
           if test -d "dependency/actions/compile"; then
             echo "Compilation action provided"
-            echo "::set-output name=should-compile::'true'"
+            echo "::set-output name=should-compile::true"
           fi
+      - name: check output
+        run: |
+          echo ${{ steps.check.outputs.should-compile }}
   compile:
     name: Compile and Test
     needs:
