@@ -96,8 +96,9 @@ jobs:
     # if: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.sha256 == '' && fromJSON(needs.retrieve.outputs.metadata-json).*.uri = '' }}
     strategy:
       matrix:
-        version: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.version }}
-        target: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.target }}
+        version: ${{ fromJSON(needs.retrieve.outputs.metadata-json) }}
+        # version: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.version }}
+        # target: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.target }}
         # sha256: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.sha256 }}
         # uri: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.uri }}
     runs-on: ubuntu-latest
@@ -119,9 +120,9 @@ jobs:
         # TODO make this a local path
         uses: joshuatcasey/bundler/dependency/actions/compile@sophie-experiment
         with:
-          version: "${{ matrix.version }}"
+          version: "${{ fromJSON(matrix.version).version }}"
           outputDir: "${{ steps.make-outputdir.outputs.outputdir }}"
-          target: "${{ matrix.target }}"
+          target: "${{ fromJSON(matrix.version).target }}"
       # - name: Test
       #   working-directory: dependency
       #   run: |
@@ -131,7 +132,7 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          name: '${{ fromJSON(needs.retrieve.outputs.id) }}-${{ matrix.version }}-${{ matrix.target }}'
+          name: '${{ needs.retrieve.outputs.id }}-${{ matrix.version }}-${{ matrix.target }}'
           path: '${{ steps.make-outputdir.outputs.outputdir }}/*'
   # assemble:
   #   name: Assemble Metadata information
