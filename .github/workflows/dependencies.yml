@@ -96,7 +96,7 @@ jobs:
     # if: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.sha256 == '' && fromJSON(needs.retrieve.outputs.metadata-json).*.uri = '' }}
     strategy:
       matrix:
-        version: ${{ fromJSON(needs.retrieve.outputs.metadata-json) }}
+        version: ${{ fromJSON(needs.retrieve.outputs.metadata-json).* }}
         # version: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.version }}
         # target: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.target }}
         # sha256: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.sha256 }}
@@ -113,16 +113,21 @@ jobs:
       # - name: Create matrix.json
       #   working-directory: "${{ steps.make-outputdir.outputs.outputdir }}"
       #   run: |
-      #     echo '${{ toJSON(matrix) }}' > matrix.json
-      #     cat matrix.json
-      - name: Compile version ${{ matrix.version }}
+      #     echo '${{ toJSON(matrix) }}'
+      #     echo '${{ toJSON(matrix).version }}'
+      - name: Parse version and target from matrix 
+        id: parse-matrix
+        run: |
+          echo "::set-output name=version::$(echo '${{ toJSON(matrix) }}' | jq -r .version.version)"
+          echo "::set-output name=target::$(echo '${{ toJSON(matrix) }}' | jq -r .version.target)"
+      - name: Compile version ${{ steps.parse-matrix.outputs.version }} on ${{ steps.parse-matrix.outputs.target }} Dockerfile
         id: compile
         # TODO make this a local path
         uses: joshuatcasey/bundler/dependency/actions/compile@sophie-experiment
         with:
-          version: "${{ fromJSON(matrix.version).version }}"
+          version: "${{ steps.parse-matrix.outputs.version }}"
           outputDir: "${{ steps.make-outputdir.outputs.outputdir }}"
-          target: "${{ fromJSON(matrix.version).target }}"
+          target: "${{ steps.parse-matrix.outputs.target }}"
       # - name: Test
       #   working-directory: dependency
       #   run: |
