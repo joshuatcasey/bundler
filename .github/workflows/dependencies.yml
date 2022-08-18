@@ -21,26 +21,6 @@ jobs:
       - name: Select Go Version
         id: select-go-version
         run: echo "::set-output name=go-version::>=1.18.0"
-  # get-targets:
-  #   name: Get Targets
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     targets: ${{ steps.get-targets.outputs.targets }}
-  #   steps:
-  #     - name: Check out code
-  #       uses: actions/checkout@v2
-  #     - name: Get Image IDs
-  #       id: get-targets
-  #       working-directory: dependency
-  #       run: |
-  #         TARGETS=$(cat targets.json)
-  #         TARGETS="${TARGETS//'%'/'%25'}"
-  #         TARGETS="${TARGETS//$'\n'/'%0A'}"
-  #         TARGETS="${TARGETS//$'\r'/'%0D'}"
-  #         echo "::set-output name=targets::${TARGETS}"
-  #     - name: Print Targets
-  #       run: echo "${{ steps.get-targets.outputs.targets }}"
-  #
   # TODO: what happens when there are no new versions
   retrieve:
     name: Retrieve new versions and generate metadata
@@ -51,8 +31,6 @@ jobs:
       metadata-filepath: ${{ steps.retrieve.outputs.metadata-filepath }}
       metadata-json: ${{ steps.retrieve.outputs.metadata-json }}
       id: ${{ steps.retrieve.outputs.id }}
-      # new_versions: ${{ steps.retrieve.outputs.new_versions }}
-      # name: ${{ steps.retrieve.outputs.name }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -70,9 +48,7 @@ jobs:
             buildpackTomlPath="${{ github.workspace }}/buildpack.toml" \
             output="${OUTPUT}"
 
-
           id=`cat "${OUTPUT}" | jq -r .[0].id`
-          echo "Metadata JSON output for $id:"
           content=`cat "${OUTPUT}" | jq -r`
 
           content="${content//'%'/'%25'}"
@@ -89,35 +65,48 @@ jobs:
           name: metadata.json
           path: ${{ steps.retrieve.outputs.metadata-filepath }}
 
+  get-action:
+    name: Get Compilation Action
+    outputs:
+      should-compile: ${{ steps.check.outputs.should-compile }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Has Compilation Action?
+        id: check
+        run: |
+          if test -f "./dependency/actions/compile"; then
+            echo "Compilation action provided"
+            echo "::set-output name=should-compile::'true'"
+          fi
   compile:
-    name: Compile
+    name: Compile and Test
     needs:
       - retrieve
-    # if: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.sha256 == '' && fromJSON(needs.retrieve.outputs.metadata-json).*.uri = '' }}
+      - get-action
     strategy:
       matrix:
         version: ${{ fromJSON(needs.retrieve.outputs.metadata-json).* }}
-        # version: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.version }}
-        # target: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.target }}
-        # sha256: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.sha256 }}
-        # uri: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.uri }}
+    if: ${{ needs.get-action.outputs.should-compile == 'true' }}
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
+      - name: Parse matrix
+        id: parse-matrix
+        run: |
+          echo "::set-output name=version::$(echo '${{ toJSON(matrix) }}' | jq -r .version.version)"
+          echo "::set-output name=target::$(echo '${{ toJSON(matrix) }}' | jq -r .version.target)"
+          echo "::set-output name=sha256::$(echo '${{ toJSON(matrix) }}' | jq -r .version.sha256)"
+          echo "::set-output name=uri::$(echo '${{ toJSON(matrix) }}' | jq -r .version.uri)"
       - name: Check out code
         uses: actions/checkout@v2
       - name: Make Temporary Artifact Directory
         id: make-outputdir
         run: |
           echo "::set-output name=outputdir::$(mktemp -d)"
-      - name: Parse version and target from matrix 
-        id: parse-matrix
-        run: |
-          echo "::set-output name=version::$(echo '${{ toJSON(matrix) }}' | jq -r .version.version)"
-          echo "::set-output name=target::$(echo '${{ toJSON(matrix) }}' | jq -r .version.target)"
       - name: Compile version ${{ steps.parse-matrix.outputs.version }} on ${{ steps.parse-matrix.outputs.target }} Dockerfile
         id: compile
-        # TODO make this a local path
+        if: ${{ steps.parse-matrix.outputs.sha256 == '' && steps.parse-matrix.outputs.uri == '' }}
         uses: ./dependency/actions/compile
         with:
           version: "${{ steps.parse-matrix.outputs.version }}"
@@ -125,8 +114,8 @@ jobs:
           target: "${{ steps.parse-matrix.outputs.target }}"
       - name: Test
         working-directory: dependency
-        run: |
          #TODO: if there is a test
+        run: |
           make test \
             version="${{ steps.parse-matrix.outputs.version }}" \
             tarballPath="${{ steps.make-outputdir.outputs.outputdir }}/*.tgz"
