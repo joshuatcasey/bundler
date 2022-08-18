@@ -93,7 +93,7 @@ jobs:
     name: Compile
     needs:
       - retrieve
-    if: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.sha256 == '' && fromJSON(needs.retrieve.outputs.metadata-json).*.uri == '' }}
+    if: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.sha256 != '' && fromJSON(needs.retrieve.outputs.metadata-json).*.uri != '' }}
     strategy:
       matrix:
         version: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.version }}
