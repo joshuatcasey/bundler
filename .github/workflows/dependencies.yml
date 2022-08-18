@@ -64,7 +64,6 @@ jobs:
         with:
           name: metadata.json
           path: ${{ steps.retrieve.outputs.metadata-filepath }}
-
   get-action:
     name: Get Compilation Action
     outputs:
@@ -75,8 +74,9 @@ jobs:
         uses: actions/checkout@v2
       - name: Has Compilation Action?
         id: check
+        working-directory: dependency
         run: |
-          if test -f "./dependency/actions/compile"; then
+          if test -f "actions/compile"; then
             echo "Compilation action provided"
             echo "::set-output name=should-compile::'true'"
           fi
