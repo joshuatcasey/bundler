@@ -67,17 +67,25 @@ jobs:
   get-action:
     name: Get Compilation Action
     outputs:
-      should-compile: ${{ steps.check.outputs.should-compile }}
+      should-compile: ${{ steps.compile-check.outputs.should-compile }}
+      should-test: ${{ steps.test-check.outputs.should-test }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Has Compilation Action?
-        id: check
+        id: compile-check
         run: |
           if test -d "dependency/actions/compile"; then
             echo "Compilation action provided"
             echo "::set-output name=should-compile::true"
+          fi
+      - name: Has Testing Action?
+        id: test-check
+        run: |
+          if test -d "dependency/test"; then
+            echo "Testing file provided"
+            echo "::set-output name=should-test::true"
           fi
   compile:
     name: Compile and Test
@@ -108,12 +116,6 @@ jobs:
           if [[ $(echo $jsonContent | jq -r .uri) != null ]]; then
             echo "::set-output name=uri::$(echo $jsonContent | jq -r .uri)"
           fi
-      - name: print matric elements
-        run: |
-          echo ${{ steps.parse-matrix.outputs.version }}
-          echo ${{ steps.parse-matrix.outputs.target }}
-          echo ${{ steps.parse-matrix.outputs.sha256 }}
-          echo ${{ steps.parse-matrix.outputs.uri }}
       - name: Compile version ${{ steps.parse-matrix.outputs.version }} on ${{ steps.parse-matrix.outputs.target }} Dockerfile
         id: compile
         if: ${{ steps.parse-matrix.outputs.sha256 == '' && steps.parse-matrix.outputs.uri == '' }}
@@ -122,19 +124,30 @@ jobs:
           version: "${{ steps.parse-matrix.outputs.version }}"
           outputDir: "${{ steps.make-outputdir.outputs.outputdir }}"
           target: "${{ steps.parse-matrix.outputs.target }}"
-      - name: Test
-        working-directory: dependency
-         #TODO: if there is a test
-         #TODO if we want to test a non-compiled dep
-        run: |
-          make test \
-            version="${{ steps.parse-matrix.outputs.version }}" \
-            tarballPath="${{ steps.make-outputdir.outputs.outputdir }}/*.tgz"
       - name: Upload
         uses: actions/upload-artifact@v3
+        if: ${{ steps.parse-matrix.outputs.sha256 == '' && steps.parse-matrix.outputs.uri == '' }}
         with:
           name: '${{ needs.retrieve.outputs.id }}-${{ steps.parse-matrix.outputs.version }}-${{ steps.parse-matrix.outputs.target }}'
           path: '${{ steps.make-outputdir.outputs.outputdir }}/*'
+      ## TODO:
+      #   add a bucket upload mechanism
+      #   add a step for when upload happens, we update the SHA and URI (steps.parse-matrix.outputs.uri updated)
+      #   tje Update SHA256 and URi step will change.
+      - name: Update SHA256 and URI
+        if: ${{ steps.parse-matrix.outputs.sha256 == '' && steps.parse-matrix.outputs.uri == '' }}
+        run: |
+          newPath="${{ steps.make-outputdir.outputs.outputdir }}/.tgz"
+          ${{ steps.parse-matrix.outputs.uri  }} = newPath
+      - name: Test
+        working-directory: dependency
+        if: ${{ needs.get-action.outputs.should-test == 'true' }}
+         #TODO: if there is a test
+        run: |
+          make test \
+            version="${{ steps.parse-matrix.outputs.version }}" \
+            tarballPath="${{ steps.parse-matrix.outputs.uri }}"
+
   # assemble:
   #   name: Assemble Metadata information
   #   needs:
