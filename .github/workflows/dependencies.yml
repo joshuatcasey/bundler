@@ -79,9 +79,6 @@ jobs:
             echo "Compilation action provided"
             echo "::set-output name=should-compile::true"
           fi
-      - name: check output
-        run: |
-          echo ${{ steps.check.outputs.should-compile }}
   compile:
     name: Compile and Test
     needs:
@@ -96,10 +93,8 @@ jobs:
       - name: Parse matrix
         id: parse-matrix
         run: |
-          echo "::set-output name=version::$(echo '${{ toJSON(matrix) }}' | jq -r .version.version)"
-          echo "::set-output name=target::$(echo '${{ toJSON(matrix) }}' | jq -r .version.target)"
-          echo "::set-output name=sha256::$(echo '${{ toJSON(matrix) }}' | jq -r .version.sha256)"
-          echo "::set-output name=uri::$(echo '${{ toJSON(matrix) }}' | jq -r .version.uri)"
+          echo "::set-output name=version::$(echo '${{ toJSON(matrix.version) }}' | jq -r .version)"
+          echo "::set-output name=target::$(echo '${{ toJSON(matrix.version) }}' | jq -r .target)"
       - name: Check out code
         uses: actions/checkout@v2
       - name: Make Temporary Artifact Directory
@@ -108,7 +103,7 @@ jobs:
           echo "::set-output name=outputdir::$(mktemp -d)"
       - name: Compile version ${{ steps.parse-matrix.outputs.version }} on ${{ steps.parse-matrix.outputs.target }} Dockerfile
         id: compile
-        if: ${{ steps.parse-matrix.outputs.sha256 == '' && steps.parse-matrix.outputs.uri == '' }}
+        # if: ${{ steps.parse-matrix.outputs.sha256 == '' && steps.parse-matrix.outputs.uri == '' }}
         uses: ./dependency/actions/compile
         with:
           version: "${{ steps.parse-matrix.outputs.version }}"
@@ -117,6 +112,7 @@ jobs:
       - name: Test
         working-directory: dependency
          #TODO: if there is a test
+         #TODO if we want to test a non-compiled dep
         run: |
           make test \
             version="${{ steps.parse-matrix.outputs.version }}" \
