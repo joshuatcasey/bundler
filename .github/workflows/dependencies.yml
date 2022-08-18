@@ -40,6 +40,8 @@ jobs:
   #         echo "::set-output name=targets::${TARGETS}"
   #     - name: Print Targets
   #       run: echo "${{ steps.get-targets.outputs.targets }}"
+  #
+  # TODO: what happens when there are no new versions
   retrieve:
     name: Retrieve new versions and generate metadata
     needs:
@@ -47,8 +49,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       metadata-filepath: ${{ steps.retrieve.outputs.metadata-filepath }}
+      metadata-json: ${{ steps.retrieve.outputs.metadata-json }}
+      id: ${{ steps.retrieve.outputs.id }}
       # new_versions: ${{ steps.retrieve.outputs.new_versions }}
-      # id: ${{ steps.retrieve.outputs.id }}
       # name: ${{ steps.retrieve.outputs.name }}
     steps:
       - name: Check out code
@@ -67,68 +70,74 @@ jobs:
             buildpackTomlPath="${{ github.workspace }}/buildpack.toml" \
             output="${OUTPUT}"
 
-          echo "Metadata output:"
-          cat "${OUTPUT}" | jq -r
 
-          # VERSIONS=$(jq '.Versions' ${OUTPUT})
-          # VERSIONS="${VERSIONS//'%'/'%25'}"
-          # VERSIONS="${VERSIONS//$'\n'/'%0A'}"
-          # VERSIONS="${VERSIONS//$'\r'/'%0D'}"
+          id=`cat "${OUTPUT}" | jq -r .[0].id`
+          echo "Metadata JSON output for $id:"
+          content=`cat "${OUTPUT}" | jq -r`
+
+          content="${content//'%'/'%25'}"
+          content="${content//$'\n'/'%0A'}"
+          content="${content//$'\r'/'%0D'}"
 
           echo "::set-output name=metadata-filepath::${OUTPUT}"
+          echo "::set-output name=metadata-json::$content"
+          echo "::set-output name=id::$id"
+      ## TODO do we need this?
       - name: Upload `${{ steps.retrieve.outputs.metadata-filepath }}`
         uses: actions/upload-artifact@v3
         with:
           name: metadata.json
           path: ${{ steps.retrieve.outputs.metadata-filepath }}
 
-    # strategy:
-    #   matrix:
-    #     version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
-    # runs-on: ubuntu-latest
-    # outputs:
-  # compile:
-  #   name: Compile
-  #   needs:
-  #     - retrieve
-  #     - get-targets
-  #   strategy:
-  #     matrix:
-  #       image: ${{ fromJSON(needs.get-targets.outputs.targets).*.image }}
-  #       version: ${{ fromJSON(needs.retrieve.outputs.new_versions) }}
-  #       include: ${{ fromJSON(needs.get-targets.outputs.targets) }}
-  #   runs-on: ubuntu-latest
-  #   continue-on-error: true
-  #   steps:
-  #     - name: Check out code
-  #       uses: actions/checkout@v2
-  #     - name: Make Temporary Artifact Directory
-  #       id: make-outputdir
-  #       run: |
-  #         echo "::set-output name=outputdir::$(mktemp -d)"
-  #     - name: Create matrix.json
-  #       working-directory: "${{ steps.make-outputdir.outputs.outputdir }}"
-  #       run: |
-  #         echo '${{ toJSON(matrix) }}' > matrix.json
-  #         cat matrix.json
-  #     - name: Compile version ${{ matrix.version }}
-  #       id: compile
-  #       uses: joshuatcasey/bundler/dependency/actions/compile@main
-  #       with:
-  #         version: "${{ matrix.version }}"
-  #         outputDir: "${{ steps.make-outputdir.outputs.outputdir }}"
-  #         target: "${{ matrix.target }}"
-  #     - name: Test
-  #       working-directory: dependency
-  #       run: |
-  #         make test \
-  #           version="${{ matrix.version }}" \
-  #           tarball_name="${{ steps.make-outputdir.outputs.outputdir }}/*.tgz"
-  #     - name: Upload
-  #       uses: actions/upload-artifact@v3
-  #       with:
-  #         name: '${{ fromJSON(needs.retrieve.outputs.id) }}-${{ matrix.version }}-${{ matrix.target }}'
-  #         path: '${{ steps.make-outputdir.outputs.outputdir }}/*'
+  compile:
+    name: Compile
+    needs:
+      - retrieve
+    if: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.sha256 == '' && fromJSON(needs.retrieve.outputs.metadata-json).*.uri == '' }}
+    strategy:
+      matrix:
+        version: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.version }}
+        target: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.target }}
+        sha256: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.sha256 }}
+        uri: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.uri }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      # Compile should run if the SHA256 and URI fields in metadata are blank
+      - name: Should Compile?
+        if: ${{ matrix.sha256 != '' || matrix.uri != '' }}
+        run: exit_with_success
+
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Make Temporary Artifact Directory
+        id: make-outputdir
+        run: |
+          echo "::set-output name=outputdir::$(mktemp -d)"
+      # - name: Create matrix.json
+      #   working-directory: "${{ steps.make-outputdir.outputs.outputdir }}"
+      #   run: |
+      #     echo '${{ toJSON(matrix) }}' > matrix.json
+      #     cat matrix.json
+      - name: Compile version ${{ matrix.version }}
+        id: compile
+        # TODO make this a local path
+        uses: joshuatcasey/bundler/dependency/actions/compile@sophie-experiment
+        with:
+          version: "${{ matrix.version }}"
+          outputDir: "${{ steps.make-outputdir.outputs.outputdir }}"
+          target: "${{ matrix.target }}"
+      # - name: Test
+      #   working-directory: dependency
+      #   run: |
+      #     make test \
+      #       version="${{ matrix.version }}" \
+      #       tarball_name="${{ steps.make-outputdir.outputs.outputdir }}/*.tgz"
+      - name: Upload
+        uses: actions/upload-artifact@v3
+        with:
+          name: '${{ fromJSON(needs.retrieve.outputs.id) }}-${{ matrix.version }}-${{ matrix.target }}'
+          path: '${{ steps.make-outputdir.outputs.outputdir }}/*'
   # assemble:
   #   name: Assemble Metadata information
   #   needs:

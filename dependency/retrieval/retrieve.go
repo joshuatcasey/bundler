@@ -63,7 +63,7 @@ func main() {
 		panic(fmt.Errorf("cannot write to %s: %w", output, err))
 	}
 
-	fmt.Println(string(bytes))
+	fmt.Println("done!")
 }
 
 func filterToPatches(versionsFilteredByConstraints map[string][]*semver.Version, config cargo.Config, buildpackVersions []string) []string {
