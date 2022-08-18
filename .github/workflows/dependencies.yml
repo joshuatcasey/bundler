@@ -93,21 +93,16 @@ jobs:
     name: Compile
     needs:
       - retrieve
-    if: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.sha256 != '' && fromJSON(needs.retrieve.outputs.metadata-json).*.uri != '' }}
+    # if: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.sha256 == '' && fromJSON(needs.retrieve.outputs.metadata-json).*.uri = '' }}
     strategy:
       matrix:
         version: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.version }}
         target: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.target }}
-        sha256: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.sha256 }}
-        uri: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.uri }}
+        # sha256: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.sha256 }}
+        # uri: ${{ fromJSON(needs.retrieve.outputs.metadata-json).*.uri }}
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      # Compile should run if the SHA256 and URI fields in metadata are blank
-      - name: Should Compile?
-        if: ${{ matrix.sha256 != '' || matrix.uri != '' }}
-        run: exit_with_success
-
       - name: Check out code
         uses: actions/checkout@v2
       - name: Make Temporary Artifact Directory
