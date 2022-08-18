@@ -178,7 +178,7 @@ func getDependencyVersion(version string) []cargo.ConfigMetadataDependency {
 	depURL := fmt.Sprintf("https://rubygems.org/downloads/bundler-%s.gem", version)
 	for _, release := range bundlerReleases {
 		if release.Version.String() == version {
-			for _, stacks := range targets {
+			for target, stacks := range targets {
 				dependencies = append(dependencies,
 					cargo.ConfigMetadataDependency{
 						Version:         version,
@@ -191,6 +191,7 @@ func getDependencyVersion(version string) []cargo.ConfigMetadataDependency {
 						PURL:            generatePURL("bundler", version, release.SHA, depURL),
 						Licenses:        lookupLicenses(depURL),
 						Stacks:          stacks,
+						Target:          target,
 					})
 			}
 		}

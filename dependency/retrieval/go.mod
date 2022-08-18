@@ -4,19 +4,19 @@ go 1.18
 
 require (
 	github.com/Masterminds/semver/v3 v3.1.1
-	github.com/anchore/packageurl-go v0.1.1-0.20220314153042-1bcd40e5206b
+	github.com/anchore/packageurl-go v0.1.1-0.20220428202044-a072fa3cb6d7
 	github.com/go-enry/go-license-detector/v4 v4.3.0
 	github.com/joshuatcasey/bundler/libdependency/common v0.0.0-20220615212510-d0acf95765c6
-	github.com/paketo-buildpacks/packit/v2 v2.3.0
+	github.com/paketo-buildpacks/packit/v2 v2.4.2-0.20220818135051-c2082b1c53fd
 	golang.org/x/exp v0.0.0-20220608143224-64259d1afd70
 )
 
 require (
-	github.com/BurntSushi/toml v1.1.0 // indirect
+	github.com/BurntSushi/toml v1.2.0 // indirect
 	github.com/dgryski/go-minhash v0.0.0-20170608043002-7fe510aff544 // indirect
 	github.com/ekzhu/minhash-lsh v0.0.0-20171225071031-5c06ee8586a1 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.0 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.1 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.0.0 // indirect
 	github.com/go-git/go-git/v5 v5.1.0 // indirect
@@ -33,9 +33,9 @@ require (
 	github.com/shogo82148/go-shuffle v0.0.0-20170808115208-59829097ff3b // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xanzy/ssh-agent v0.2.1 // indirect
-	golang.org/x/crypto v0.0.0-20220213190939-1e6e3497d506 // indirect
-	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
-	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
+	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
+	golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e // indirect
+	golang.org/x/sys v0.0.0-20220624220833-87e55d714810 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gonum.org/v1/gonum v0.7.0 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.6 // indirect
