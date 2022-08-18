@@ -111,7 +111,7 @@ jobs:
           echo ${{ steps.parse-matrix.outputs.uri }}
       - name: Compile version ${{ steps.parse-matrix.outputs.version }} on ${{ steps.parse-matrix.outputs.target }} Dockerfile
         id: compile
-        if: ${{ steps.parse-matrix.outputs.sha256 }} == null
+        if: ${{ steps.parse-matrix.outputs.sha256 }} == null && ${{ steps.parse-matrix.outputs.uri }} == null
         uses: ./dependency/actions/compile
         with:
           version: "${{ steps.parse-matrix.outputs.version }}"
