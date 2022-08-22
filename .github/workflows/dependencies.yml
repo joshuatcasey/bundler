@@ -115,31 +115,43 @@ jobs:
         uses: ./dependency/actions/compile
         with:
           version: "${{ matrix.includes.version }}"
-          outputDir: "${{ steps.make-outputdir.outputs.outputdir }}"
+          outputdir: "${{ steps.make-outputdir.outputs.outputdir }}"
           target: "${{ matrix.includes.target }}"
-      - name: Upload
+      - name: Upload workflow asset
         uses: actions/upload-artifact@v3
         if: ${{ matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
         with:
           name: '${{ needs.retrieve.outputs.id }}-${{ matrix.includes.version }}-${{ matrix.includes.target }}'
           path: '${{ steps.make-outputdir.outputs.outputdir }}/*'
+      - name: Test Dependency
+        working-directory: dependency
+        if: ${{ needs.get-action.outputs.should-test == 'true' }}
+        run: |
+          make test \
+            version="${{ matrix.includes.version }}" \
+            tarballPath="${{ steps.make-outputdir.outputs.outputdir }}/*.tgz"
       ## TODO:
       #   add a bucket upload mechanism
       #   add a step for when upload happens, we update the SHA and URI (steps.parse-matrix.outputs.uri updated)
       #   tje Update SHA256 and URi step will change.
-      - name: Update SHA256 and URI
+      - name: Download metadata.json
+        uses: actions/download-artifact@v3
+        with:
+          name: metadata.json
+      - name: Update SHA256 and URI in ${{ needs.retrieve.outputs.metadata-filepath }}
         if: ${{ matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
-        run: |
-          newPath="${{ steps.make-outputdir.outputs.outputdir }}/.tgz"
-          ${{ steps.parse-matrix.outputs.uri  }} = newPath
-      - name: Test
-        working-directory: dependency
-        if: ${{ needs.get-action.outputs.should-test == 'true' }}
-         #TODO: if there is a test
-        run: |
-          make test \
-            version="${{ matrix.includes.version }}" \
-            tarballPath="${{ steps.make-outputdir.outputs.outputdir }}/.tgz"
+        uses: ./dependency/actions/update-json
+        with:
+          version: "${{ matrix.includes.version }}"
+          target: "${{ matrix.includes.target }}"
+          sha256: "123456"
+          uri: "123456"
+          file: "metadata.json"
+      - name: Upload modified metadata
+        uses: actions/upload-artifact@v3
+        with:
+          name: metadata.json
+          path: metadata.json
 
   # assemble:
   #   name: Assemble Metadata information

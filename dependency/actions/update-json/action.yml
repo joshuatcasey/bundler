@@ -1,0 +1,37 @@
+name: 'Modify metadata.json'
+
+description: |
+  Compiles a dependency given a version, output directory, and a target image to compile on
+  Modifies a metadata.json file with SHA256 and URI fields
+
+inputs:
+  version:
+    description: 'dependency version'
+    required: true
+  target:
+    description: 'dependency OS target variant'
+    required: true
+  sha256:
+    description: 'dependency SHA256 to add'
+    required: true
+  uri:
+    description: 'dependency URI to add'
+    required: true
+  file:
+    description: 'metadata file to modify'
+    required: true
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+  - "--version"
+  - ${{ inputs.version }}
+  - "--target"
+  - ${{ inputs.target }}
+  - "--sha256"
+  - ${{ inputs.sha256 }}
+  - "--uri"
+  - ${{ inputs.uri }}
+  - "--file"
+  - ${{ inputs.file }}
