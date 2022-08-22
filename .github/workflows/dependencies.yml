@@ -94,7 +94,7 @@ jobs:
       - get-action
     strategy:
       matrix:
-        version: ${{ fromJSON(needs.retrieve.outputs.metadata-json).* }}
+        includes: ${{ fromJSON(needs.retrieve.outputs.metadata-json) }}
     if: ${{ needs.get-action.outputs.should-compile == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -107,8 +107,12 @@ jobs:
       - name: Parse matrix
         id: parse-matrix
         run: |
-          jsonContent='${{ toJSON(matrix.version) }}'
-          echo "::set-output name=version::$(echo $jsonContent | jq -r .version)"
+          jsonContent='${{ toJSON(matrix) }}'
+          echo $jsonContent
+          echo '${{ matrix.includes }}'
+          echo '${{ matrix.includes.version }}'
+          echo '${{ matrix.version }}'
+          echo "::set-output name=version::$()"
           echo "::set-output name=target::$(echo $jsonContent | jq -r .target)"
           if [[ $(echo $jsonContent | jq -r .sha256) != null ]]; then
             echo "::set-output name=sha256::$(echo $jsonContent | jq -r .sha256)"
