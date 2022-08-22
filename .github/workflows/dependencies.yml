@@ -107,39 +107,28 @@ jobs:
       - name: Parse matrix
         id: parse-matrix
         run: |
-          jsonContent='${{ toJSON(matrix) }}'
-          echo $jsonContent
-          echo '${{ matrix.includes }}'
           echo '${{ matrix.includes.version }}'
-          echo '${{ matrix.version }}'
-          echo "::set-output name=version::$()"
-          echo "::set-output name=target::$(echo $jsonContent | jq -r .target)"
-          if [[ $(echo $jsonContent | jq -r .sha256) != null ]]; then
-            echo "::set-output name=sha256::$(echo $jsonContent | jq -r .sha256)"
-          fi
-          if [[ $(echo $jsonContent | jq -r .uri) != null ]]; then
-            echo "::set-output name=uri::$(echo $jsonContent | jq -r .uri)"
-          fi
-      - name: Compile version ${{ steps.parse-matrix.outputs.version }} on ${{ steps.parse-matrix.outputs.target }} Dockerfile
+          echo '${{ matrix.includes.target }}'
+      - name: Compile version ${{ matrix.includes.version }} on ${{ matrix.includes.target }} Dockerfile
         id: compile
-        if: ${{ steps.parse-matrix.outputs.sha256 == '' && steps.parse-matrix.outputs.uri == '' }}
+        if: ${{ matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
         uses: ./dependency/actions/compile
         with:
-          version: "${{ steps.parse-matrix.outputs.version }}"
+          version: "${{ matrix.includes.version }}"
           outputDir: "${{ steps.make-outputdir.outputs.outputdir }}"
-          target: "${{ steps.parse-matrix.outputs.target }}"
+          target: "${{ matrix.includes.target }}"
       - name: Upload
         uses: actions/upload-artifact@v3
-        if: ${{ steps.parse-matrix.outputs.sha256 == '' && steps.parse-matrix.outputs.uri == '' }}
+        if: ${{ matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
         with:
-          name: '${{ needs.retrieve.outputs.id }}-${{ steps.parse-matrix.outputs.version }}-${{ steps.parse-matrix.outputs.target }}'
+          name: '${{ needs.retrieve.outputs.id }}-${{ matrix.includes.version }}-${{ matrix.includes.target }}'
           path: '${{ steps.make-outputdir.outputs.outputdir }}/*'
       ## TODO:
       #   add a bucket upload mechanism
       #   add a step for when upload happens, we update the SHA and URI (steps.parse-matrix.outputs.uri updated)
       #   tje Update SHA256 and URi step will change.
       - name: Update SHA256 and URI
-        if: ${{ steps.parse-matrix.outputs.sha256 == '' && steps.parse-matrix.outputs.uri == '' }}
+        if: ${{ matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
         run: |
           newPath="${{ steps.make-outputdir.outputs.outputdir }}/.tgz"
           ${{ steps.parse-matrix.outputs.uri  }} = newPath
@@ -149,8 +138,8 @@ jobs:
          #TODO: if there is a test
         run: |
           make test \
-            version="${{ steps.parse-matrix.outputs.version }}" \
-            tarballPath="${{ steps.parse-matrix.outputs.uri }}"
+            version="${{ matrix.includes.version }}" \
+            tarballPath="${{ steps.make-outputdir.outputs.outputdir }}/.tgz"
 
   # assemble:
   #   name: Assemble Metadata information
