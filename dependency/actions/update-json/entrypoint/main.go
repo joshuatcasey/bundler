@@ -72,7 +72,9 @@ func main() {
 	}
 	defer file.Close()
 
-	fmt.Println("Success!")
+	fmt.Println("Success! Updated metadata with:")
+	fmt.Printf(`"sha256": "%s"\n`, config.SHA256)
+	fmt.Printf(`"uri": "%s"`, config.URI)
 }
 
 func fail(err error) {

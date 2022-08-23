@@ -87,6 +87,9 @@ jobs:
             echo "Testing file provided"
             echo "::set-output name=should-test::true"
           fi
+  # Compilation will be skipped if no compilation action is provided
+  # Compilation for a specific version/target will be skipped if the SHA256/URI
+  # fields in its metadata are already filled out.
   compile:
     name: Compile and Test
     needs:
@@ -123,6 +126,7 @@ jobs:
         with:
           name: '${{ needs.retrieve.outputs.id }}-${{ matrix.includes.version }}-${{ matrix.includes.target }}'
           path: '${{ steps.make-outputdir.outputs.outputdir }}/*'
+      # TODO: separate testing?
       - name: Test Dependency
         working-directory: dependency
         if: ${{ needs.get-action.outputs.should-test == 'true' }}
@@ -155,7 +159,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: metadata.json
-      - name: Update SHA256 and URI in metadata.json
+      - name: Update `sha256` and `uri` in metadata for ${{ matrix.includes.target }} ${{ matrix.includes.version }}
         if: ${{ matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
         uses: ./dependency/actions/update-json
         with:
