@@ -95,6 +95,8 @@ jobs:
     strategy:
       matrix:
         includes: ${{ fromJSON(needs.retrieve.outputs.metadata-json) }}
+      fail-fast: true
+      max-parallel: 1
     if: ${{ needs.get-action.outputs.should-compile == 'true' }}
     runs-on: ubuntu-latest
     steps:
