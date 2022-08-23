@@ -87,18 +87,19 @@ jobs:
             echo "Testing file provided"
             echo "::set-output name=should-test::true"
           fi
-  # Compilation will be skipped if no compilation action is provided
-  # Compilation for a specific version/target will be skipped if the SHA256/URI
-  # fields in its metadata are already filled out.
   compile:
-    name: Compile and Test
+    name: Compile and/or Test Dependency
     needs:
       - retrieve
       - get-action
     strategy:
       matrix:
         includes: ${{ fromJSON(needs.retrieve.outputs.metadata-json) }}
-    if: ${{ needs.get-action.outputs.should-compile == 'true' }}
+    # Run job step if
+    #   (1) needs.get-action.outputs.should-compile -> if there is a dependency/actions/compile directory in the buildpack
+    #   (2) needs.get-action.outputs.should-test -> if there is a dependency/test directory in the buildpack
+    #   (3) See line 113 -> if the dependency SHA256 and URI field are empty, signaling they need to be calculated
+    if: ${{ needs.get-action.outputs.should-compile == 'true' || needs.get-action.outputs.should-test == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -107,26 +108,34 @@ jobs:
         id: make-outputdir
         run: |
           echo "::set-output name=outputdir::$(mktemp -d)"
-      - name: Parse matrix
-        id: parse-matrix
-        run: |
-          echo '${{ matrix.includes.version }}'
-          echo '${{ matrix.includes.target }}'
+      # Compile if all of the following conditions are met:
+      #   (1) compilation Github Action presetn in the buildpack directory
+      #   (2) SHA256 in metadata.json is empty
+      #   (3) URI in metadata.json is empty
       - name: Compile version ${{ matrix.includes.version }} on ${{ matrix.includes.target }} Dockerfile
         id: compile
-        if: ${{ matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
+        if: ${{ needs.get-action.outputs.should-compile && matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
         uses: ./dependency/actions/compile
         with:
           version: "${{ matrix.includes.version }}"
           outputdir: "${{ steps.make-outputdir.outputs.outputdir }}"
           target: "${{ matrix.includes.target }}"
+      # If compiled, upload the tarball and SHA256 file for usage in the Update metadata job
       - name: Upload workflow asset
         uses: actions/upload-artifact@v3
         if: ${{ matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
         with:
           name: '${{ needs.retrieve.outputs.id }}-${{ matrix.includes.version }}-${{ matrix.includes.target }}'
           path: '${{ steps.make-outputdir.outputs.outputdir }}/*'
-      # TODO: separate testing?
+      # Download the tarball for testing if:
+      #   (1) dependency testing code is present in the buildpack directory
+      #   (2) URI in metadata.json is available
+      - name: Download tarball (if not compiled)
+        if: ${{ matrix.includes.uri != ''  && needs.get-action.outputs.should-test == 'true' }}
+        run: |
+          curl ${{ matrix.includes.uri }} --silent --location --output ${{ steps.make-outputdir.outputs.outputdir }}/dependency.tgz
+      # Test the dependency tarball if:
+      #   (1) dependency testing code is present in the buildpack directory
       - name: Test Dependency
         working-directory: dependency
         if: ${{ needs.get-action.outputs.should-test == 'true' }}
@@ -155,24 +164,37 @@ jobs:
       #   add a bucket upload mechanism
       #   add a step for when upload happens, we update the SHA and URI (steps.parse-matrix.outputs.uri updated)
       #   tje Update SHA256 and URi step will change.
+      - name: Make Temporary Artifact Directory
+        id: make-outputdir
+        run: |
+          echo "::set-output name=outputdir::$(mktemp -d)"
       - name: Download metadata.json
         uses: actions/download-artifact@v3
         with:
           name: metadata.json
+          path: '${{ steps.make-outputdir.outputs.outputdir }}'
+      - name: Download SHA256 file
+        uses: actions/download-artifact@v3
+        with:
+          name: '${{ needs.retrieve.outputs.id }}-${{ matrix.includes.version }}-${{ matrix.includes.target }}'
+          path: '${{ steps.make-outputdir.outputs.outputdir }}'
+      - name: Get SHA256
+        id: get-sha256
+        run: echo "::set-output name=sha256::$(cat ${{ steps.make-outputdir.outputs.outputdir }}/${{ needs.retrieve.outputs.id }}-${{ matrix.includes.version }}-${{ matrix.includes.target }}.tgz.sha256)"
       - name: Update `sha256` and `uri` in metadata for ${{ matrix.includes.target }} ${{ matrix.includes.version }}
         if: ${{ matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
         uses: ./dependency/actions/update-json
         with:
           version: "${{ matrix.includes.version }}"
           target: "${{ matrix.includes.target }}"
-          sha256: "123456"
+          sha256: ${{ steps.get-sha256.outputs.sha256 }}
           uri: "123456"
-          file: "metadata.json"
+          file: "${{ steps.make-outputdir.outputs.outputdir }}/metadata.json"
       - name: Upload modified metadata
         uses: actions/upload-artifact@v3
         with:
           name: metadata.json
-          path: metadata.json
+          path: "${{ steps.make-outputdir.outputs.outputdir }}/metadata.json"
 
   assemble:
     name: Update buildpack.toml
