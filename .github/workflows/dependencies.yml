@@ -207,10 +207,16 @@ jobs:
         with:
           branch: automation/dependencies/update-from-metadata
 
+      - name: Make Temporary Artifact Directory
+        id: make-outputdir
+        run: |
+          echo "::set-output name=outputdir::$(mktemp -d)"
+
       - name: Download metadata.json
         uses: actions/download-artifact@v3
         with:
           name: metadata.json
+          path: "${{ steps.make-outputdir.outputs.outputdir }}"
 
       - name: Update dependencies from metadata.json
         id: update
@@ -218,7 +224,7 @@ jobs:
         uses: ./dependency/actions/update
         with:
           buildpack_toml_path: "${{ github.workspace }}/buildpack.toml"
-          metadata_file_path: "metadata.json"
+          metadata_file_path: "${{ steps.make-outputdir.outputs.outputdir }}/metadata.json"
       - name: Show git diff
         run: |
           git diff
