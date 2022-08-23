@@ -55,19 +55,35 @@ func main() {
 	}
 
 	// Find the dependency of interest and update the SHA256
+	found := false
 	for _, dependency := range entries {
 		if dependency.Target == config.Target && dependency.Version == config.Version {
 			dependency.SHA256 = config.SHA256
 			dependency.URI = config.URI
+			found = true
 		}
 	}
 
-	_ = file.Truncate(0)
-	_, _ = file.Seek(0, 0)
+	if !found {
+		fmt.Println("No change, no matching metadata found. Exiting.")
+		os.Exit(0)
+	}
+	// Clear file and rewrite content
+	err = file.Truncate(0)
+	if err != nil {
+		// untested
+		fail(err)
+	}
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		// untested
+		fail(err)
+	}
 
 	// Write it back to the file
 	err = json.NewEncoder(file).Encode(entries)
 	if err != nil {
+		//untested
 		fail(err)
 	}
 	defer file.Close()
