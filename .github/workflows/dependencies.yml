@@ -180,7 +180,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: metadata.json
-          path: '${{ steps.make-outputdir.outputs.outputdir }}'
       - name: Update `sha256` and `uri` in metadata for ${{ matrix.includes.target }} ${{ matrix.includes.version }}
         if: ${{ matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
         uses: ./dependency/actions/update-json
@@ -189,7 +188,7 @@ jobs:
           target: "${{ matrix.includes.target }}"
           sha256: ${{ steps.get-sha256.outputs.sha256 }}
           uri: "123456"
-          file: "${{ steps.make-outputdir.outputs.outputdir }}/metadata.json"
+          file: "metadata.json"
       - name: Upload modified metadata
         uses: actions/upload-artifact@v3
         with:
