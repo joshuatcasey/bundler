@@ -178,6 +178,9 @@ jobs:
     name: Update buildpack.toml
     needs:
       - retrieve
+      - compile
+      - update-metadata
+    if: ${{ always() && needs.retrieve.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
