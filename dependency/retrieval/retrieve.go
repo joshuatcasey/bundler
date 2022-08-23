@@ -186,8 +186,6 @@ func getDependencyVersion(version string) []cargo.ConfigMetadataDependency {
 						Name:            "Bundler",
 						Source:          depURL,
 						SourceSHA256:    release.SHA,
-						URI:             depURL,
-						SHA256:          release.SHA,
 						DeprecationDate: nil,
 						CPE:             fmt.Sprintf("cpe:2.3:a:bundler:bundler:%s:*:*:*:*:ruby:*:*", version),
 						PURL:            generatePURL("bundler", version, release.SHA, depURL),
