@@ -179,8 +179,6 @@ jobs:
     needs:
       - retrieve
     runs-on: ubuntu-latest
-    outputs:
-      new-versions: ${{ steps.update.outputs.new_versions }} 
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -215,31 +213,20 @@ jobs:
         id: commit
         uses: paketo-buildpacks/github-config/actions/pull-request/create-commit@main
         with:
-          message: "Updating buildpack.toml with new versions ${{ needs.retrieve.outputs.new_versions }}"
+          message: "Updating buildpack.toml with new versions ${{ steps.update.outputs.new-versions }}"
           pathspec: "."
+
       - name: Push Branch 'automation/dependencies/update-from-metadata'
         if: ${{ steps.commit.outputs.commit_sha != '' }}
         uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
         with:
           branch: automation/dependencies/update-from-metadata
-  submit-pull-request:
-    name: Submit Pull Request
-    needs:
-      - assemble
-      - retrieve
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-        with:
-          ref: automation/dependencies/update-from-metadata
-      - name: Open Pull Request
-        run: |
-          echo ${{ needs.assemble.outputs.new-versions }}
 
-          gh pr create \
-            --title "Updates buildpack.toml with ${{ needs.assemble.outputs.new-versions }}" \
-            --body "See commit history for details" \
-            --base main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Open Pull Request
+        if: ${{ steps.commit.outputs.commit_sha != '' }}
+        uses: paketo-buildpacks/github-config/actions/pull-request/open@main
+        with:
+          #TODO: CHANGE THIS TOKEN and any others
+          token: ${{ secrets.GITHUB_TOKEN }}
+          title: "Updates buildpack.toml with ${{ steps.update.outputs.new-versions }}"
+          branch: automation/buildpack.toml/update-from-metadata
