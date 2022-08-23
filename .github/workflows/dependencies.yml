@@ -152,7 +152,7 @@ jobs:
     strategy:
       matrix:
         includes: ${{ fromJSON(needs.retrieve.outputs.metadata-json) }}
-      # Run metadata update step in parallel so that metadata.json can be
+      # Run metadata update step sequentially so that metadata.json can be
       # modified for each version
       max-parallel: 1
     if: ${{ needs.get-action.outputs.should-compile == 'true' }}
@@ -202,7 +202,7 @@ jobs:
       - retrieve
       - compile
       - update-metadata
-    if: ${{ always() && needs.retrieve.result == 'success' }}
+    if: ${{ always() && needs.retrieve.result == 'success' && (needs.compile.result == 'success' || needs.compile.result == 'skip') }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
