@@ -168,11 +168,6 @@ jobs:
         id: make-outputdir
         run: |
           echo "::set-output name=outputdir::$(mktemp -d)"
-      - name: Download metadata.json
-        uses: actions/download-artifact@v3
-        with:
-          name: metadata.json
-          path: '${{ steps.make-outputdir.outputs.outputdir }}'
       - name: Download SHA256 file
         uses: actions/download-artifact@v3
         with:
@@ -181,6 +176,11 @@ jobs:
       - name: Get SHA256
         id: get-sha256
         run: echo "::set-output name=sha256::$(cat ${{ steps.make-outputdir.outputs.outputdir }}/${{ needs.retrieve.outputs.id }}-${{ matrix.includes.version }}-${{ matrix.includes.target }}.tgz.sha256)"
+      - name: Download metadata.json
+        uses: actions/download-artifact@v3
+        with:
+          name: metadata.json
+          path: '${{ steps.make-outputdir.outputs.outputdir }}'
       - name: Update `sha256` and `uri` in metadata for ${{ matrix.includes.target }} ${{ matrix.includes.version }}
         if: ${{ matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
         uses: ./dependency/actions/update-json
