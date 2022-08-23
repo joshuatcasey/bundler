@@ -47,7 +47,7 @@ func main() {
 		panic("No versions found")
 	}
 
-	fmt.Printf("generating metadata for %v", versionsFilteredByPatches)
+	fmt.Printf("generating metadata for %v\n", versionsFilteredByPatches)
 	allDependencies := []cargo.ConfigMetadataDependency{}
 	for _, version := range versionsFilteredByPatches {
 		dependencyVersions := getDependencyVersion(version)
