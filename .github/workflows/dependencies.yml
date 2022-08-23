@@ -23,7 +23,7 @@ jobs:
         run: echo "::set-output name=go-version::>=1.18.0"
   # TODO: what happens when there are no new versions
   retrieve:
-    name: Retrieve new versions and generate metadata
+    name: Retrieve New Versions and Generate Metadata
     needs:
       - select-go-version
     runs-on: ubuntu-latest
@@ -65,7 +65,7 @@ jobs:
           name: metadata.json
           path: ${{ steps.retrieve.outputs.metadata-filepath }}
   get-action:
-    name: Get Compilation Action
+    name: Get Compilation and Testing Code
     outputs:
       should-compile: ${{ steps.compile-check.outputs.should-compile }}
       should-test: ${{ steps.test-check.outputs.should-test }}
@@ -95,8 +95,6 @@ jobs:
     strategy:
       matrix:
         includes: ${{ fromJSON(needs.retrieve.outputs.metadata-json) }}
-      fail-fast: true
-      max-parallel: 1
     if: ${{ needs.get-action.outputs.should-compile == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -132,6 +130,23 @@ jobs:
           make test \
             version="${{ matrix.includes.version }}" \
             tarballPath="${{ steps.make-outputdir.outputs.outputdir }}/*.tgz"
+  update-metadata:
+    name: Update Metadata (if compiled)
+    needs:
+      - retrieve
+      - get-action
+      - compile
+    strategy:
+      matrix:
+        includes: ${{ fromJSON(needs.retrieve.outputs.metadata-json) }}
+      # Run metadata update step in parallel so that metadata.json can be
+      # modified for each version
+      max-parallel: 1
+    if: ${{ needs.get-action.outputs.should-compile == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
       ## TODO:
       #   add a bucket upload mechanism
       #   add a step for when upload happens, we update the SHA and URI (steps.parse-matrix.outputs.uri updated)
@@ -140,7 +155,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: metadata.json
-      - name: Update SHA256 and URI in ${{ needs.retrieve.outputs.metadata-filepath }}
+      - name: Update SHA256 and URI in metadata.json
         if: ${{ matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
         uses: ./dependency/actions/update-json
         with:
