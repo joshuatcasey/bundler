@@ -164,18 +164,13 @@ jobs:
       #   add a bucket upload mechanism
       #   add a step for when upload happens, we update the SHA and URI (steps.parse-matrix.outputs.uri updated)
       #   tje Update SHA256 and URi step will change.
-      - name: Make Temporary Artifact Directory
-        id: make-outputdir
-        run: |
-          echo "::set-output name=outputdir::$(mktemp -d)"
       - name: Download SHA256 file
         uses: actions/download-artifact@v3
         with:
           name: '${{ needs.retrieve.outputs.id }}-${{ matrix.includes.version }}-${{ matrix.includes.target }}'
-          path: '${{ steps.make-outputdir.outputs.outputdir }}'
       - name: Get SHA256
         id: get-sha256
-        run: echo "::set-output name=sha256::$(cat ${{ steps.make-outputdir.outputs.outputdir }}/${{ needs.retrieve.outputs.id }}-${{ matrix.includes.version }}-${{ matrix.includes.target }}.tgz.sha256)"
+        run: echo "::set-output name=sha256::$(cat ${{ needs.retrieve.outputs.id }}-${{ matrix.includes.version }}-${{ matrix.includes.target }}.tgz.sha256)"
       - name: Download metadata.json
         uses: actions/download-artifact@v3
         with:
@@ -192,8 +187,8 @@ jobs:
       - name: Upload modified metadata
         uses: actions/upload-artifact@v3
         with:
-          name: metadata.json
-          path: "${{ steps.make-outputdir.outputs.outputdir }}/metadata.json"
+          name: "metadata.json"
+          path: "metadata.json"
 
   assemble:
     name: Update buildpack.toml
@@ -212,16 +207,10 @@ jobs:
         with:
           branch: automation/dependencies/update-from-metadata
 
-      - name: Make Temporary Artifact Directory
-        id: make-outputdir
-        run: |
-          echo "::set-output name=outputdir::$(mktemp -d)"
-
       - name: Download metadata.json
         uses: actions/download-artifact@v3
         with:
           name: metadata.json
-          path: "${{ steps.make-outputdir.outputs.outputdir }}"
 
       - name: Update dependencies from metadata.json
         id: update
@@ -229,7 +218,7 @@ jobs:
         uses: ./dependency/actions/update
         with:
           buildpack_toml_path: "${{ github.workspace }}/buildpack.toml"
-          metadata_file_path: "${{ steps.make-outputdir.outputs.outputdir }}/metadata.json"
+          metadata_file_path: "metadata.json"
       - name: Show git diff
         run: |
           git diff
