@@ -179,6 +179,8 @@ jobs:
     needs:
       - retrieve
     runs-on: ubuntu-latest
+    outputs:
+      new-versions: ${{ steps.update.outputs.new_versions }} 
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -233,8 +235,10 @@ jobs:
           ref: automation/dependencies/update-from-metadata
       - name: Open Pull Request
         run: |
+          echo ${{ needs.assemble.outputs.new-versions }}
+
           gh pr create \
-            --title "Updates buildpack.toml with ${{ steps.update.outputs.new_versions }}" \
+            --title "Updates buildpack.toml with ${{ needs.assemble.outputs.new-versions }}" \
             --body "See commit history for details" \
             --base main
         env:

@@ -60,3 +60,4 @@ runs:
       )"
       versions="$(echo ${versions} | cut -d'[' -f2- | cut -d']' -f-1 | sed 's/ /, /g')"
       echo "::set-output name=new_versions::${versions}"
+      echo "Added versions ${versions}"
