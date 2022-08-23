@@ -174,74 +174,68 @@ jobs:
           name: metadata.json
           path: metadata.json
 
-  # assemble:
-  #   name: Assemble Metadata information
-  #   needs:
-  #     - metadata
-  #     - compile
-  #     - select-go-version
-  #     - retrieve
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Check out code
-  #       uses: actions/checkout@v2
-  #     - name: Setup go '${{ needs.select-go-version.outputs.go-version }}'
-  #       uses: actions/setup-go@v3
-  #       with:
-  #         go-version: ${{ needs.select-go-version.outputs.go-version }}
-  #     - name: Setup temp dir
-  #       id: setup-temp-dir
-  #       run: |
-  #         echo "::set-output name=artifactPath::$(mktemp -d)"
-  #     - name: Get all artifacts
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         path: ${{ steps.setup-temp-dir.outputs.artifactPath }}
-  #     - name: List everything
-  #       working-directory: ${{ steps.setup-temp-dir.outputs.artifactPath }}
-  #       run: ls -lsaRth
-  #     - name: Run assemble
-  #       working-directory: libdependency
-  #       run: |
-  #         make assemble \
-  #           id="${{ needs.retrieve.outputs.id }}" \
-  #           artifactPath=${{ steps.setup-temp-dir.outputs.artifactPath }} \
-  #           buildpackTomlPath=${{ github.workspace }}/buildpack.toml
-  #     - name: Checkout Branch 'automation/dependencies/update'
-  #       uses: paketo-buildpacks/github-config/actions/pull-request/checkout-branch@main
-  #       with:
-  #         branch: automation/dependencies/update
-  #     - name: Show git diff
-  #       run: |
-  #         cat ${{ github.workspace }}/buildpack.toml
-  #         git diff
-  #     - name: Commit
-  #       id: commit
-  #       uses: paketo-buildpacks/github-config/actions/pull-request/create-commit@main
-  #       with:
-  #         message: "Updating buildpack.toml with new versions ${{ needs.retrieve.outputs.new_versions }}"
-  #         pathspec: "."
-  #     - name: Push Branch 'automation/dependencies/update'
-  #       if: ${{ steps.commit.outputs.commit_sha != '' }}
-  #       uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
-  #       with:
-  #         branch: automation/dependencies/update
-  # submit-pull-request:
-  #   name: Submit Pull Request
-  #   needs:
-  #     - assemble
-  #     - retrieve
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Check out code
-  #       uses: actions/checkout@v2
-  #       with:
-  #         ref: automation/dependencies/update
-  #     - name: Open Pull Request
-  #       run: |
-  #         gh pr create \
-  #           --title "Updates buildpack.toml with ${{ needs.retrieve.outputs.new_versions }}" \
-  #           --body "See commit history for details" \
-  #           --base main
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  assemble:
+    name: Update buildpack.toml
+    needs:
+      - retrieve
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Checkout Branch
+        uses: paketo-buildpacks/github-config/actions/pull-request/checkout-branch@main
+        with:
+          branch: automation/dependencies/update-from-metadata
+
+      - name: Make Temporary Artifact Directory
+        id: make-outputdir
+        run: |
+          echo "::set-output name=outputdir::$(mktemp -d)"
+
+      - name: Download metadata.json
+        uses: actions/download-artifact@v3
+        with:
+          name: metadata.json
+          path: "${{ steps.make-outputdir.outputs.outputdir }}"
+
+      - name: Update dependencies from metadata.json
+        id: update
+        # TODO change this path
+        uses: ./dependency/actions/update
+        with:
+          buildpack_toml_path: "${{ github.workspace }}/buildpack.toml"
+          metadata_file_path: "${{ steps.make-outputdir.outputs.outputdir }}/metadata.json"
+      - name: Show git diff
+        run: |
+          git diff
+      - name: Commit
+        id: commit
+        uses: paketo-buildpacks/github-config/actions/pull-request/create-commit@main
+        with:
+          message: "Updating buildpack.toml with new versions ${{ needs.retrieve.outputs.new_versions }}"
+          pathspec: "."
+      - name: Push Branch 'automation/dependencies/update-from-metadata'
+        if: ${{ steps.commit.outputs.commit_sha != '' }}
+        uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
+        with:
+          branch: automation/dependencies/update-from-metadata
+  submit-pull-request:
+    name: Submit Pull Request
+    needs:
+      - assemble
+      - retrieve
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          ref: automation/dependencies/update-from-metadata
+      - name: Open Pull Request
+        run: |
+          gh pr create \
+            --title "Updates buildpack.toml with ${{ steps.update.outputs.new_versions }}" \
+            --body "See commit history for details" \
+            --base main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
