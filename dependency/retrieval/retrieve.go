@@ -30,7 +30,7 @@ type BundlerRelease struct {
 // Copy of cargo config structure, with the addition of the Target field
 type Dependency struct {
 	cargo.ConfigMetadataDependency
-	Version string `toml:"version"          json:"version,omitempty"`
+	Target string `toml:"target"          json:"target,omitempty"`
 }
 
 var id = "bundler"
@@ -185,20 +185,23 @@ func getDependencyVersion(version string) []Dependency {
 	for _, release := range bundlerReleases {
 		if release.Version.String() == version {
 			for target, stacks := range targets {
-				dependencies = append(dependencies,
-					Dependency{
-						Version:         version,
-						ID:              "bundler",
-						Name:            "Bundler",
-						Source:          depURL,
-						SourceSHA256:    release.SHA,
-						DeprecationDate: nil,
-						CPE:             fmt.Sprintf("cpe:2.3:a:bundler:bundler:%s:*:*:*:*:ruby:*:*", version),
-						PURL:            generatePURL("bundler", version, release.SHA, depURL),
-						Licenses:        lookupLicenses(depURL),
-						Stacks:          stacks,
-						Target:          target,
-					})
+				dep := Dependency{
+					Target: target,
+				}
+
+				dep.ConfigMetadataDependency = cargo.ConfigMetadataDependency{
+					Version:         version,
+					ID:              "bundler",
+					Name:            "Bundler",
+					Source:          depURL,
+					SourceSHA256:    release.SHA,
+					DeprecationDate: nil,
+					CPE:             fmt.Sprintf("cpe:2.3:a:bundler:bundler:%s:*:*:*:*:ruby:*:*", version),
+					PURL:            generatePURL("bundler", version, release.SHA, depURL),
+					Licenses:        lookupLicenses(depURL),
+					Stacks:          stacks,
+				}
+				dependencies = append(dependencies, dep)
 			}
 		}
 	}
