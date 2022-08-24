@@ -7,7 +7,7 @@ require (
 	github.com/anchore/packageurl-go v0.1.1-0.20220428202044-a072fa3cb6d7
 	github.com/go-enry/go-license-detector/v4 v4.3.0
 	github.com/joshuatcasey/bundler/libdependency/common v0.0.0-20220615212510-d0acf95765c6
-	github.com/paketo-buildpacks/packit/v2 v2.4.2-0.20220818135051-c2082b1c53fd
+	github.com/paketo-buildpacks/packit/v2 v2.4.2
 	golang.org/x/exp v0.0.0-20220608143224-64259d1afd70
 )
 

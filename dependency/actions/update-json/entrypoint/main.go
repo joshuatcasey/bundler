@@ -10,6 +10,12 @@ import (
 	"github.com/paketo-buildpacks/packit/v2/cargo"
 )
 
+// Copy of cargo config structure, with the addition of the Target field
+type Dependency struct {
+	cargo.ConfigMetadataDependency
+	Target string `toml:"target"           json:"target,omitempty"`
+}
+
 func main() {
 	var config struct {
 		Version string
@@ -43,7 +49,7 @@ func main() {
 		fail(errors.New(`missing required input "file"`))
 	}
 
-	entries := []*cargo.ConfigMetadataDependency{}
+	entries := []*Dependency{}
 	file, err := os.OpenFile(config.File, os.O_RDWR, os.ModePerm)
 	if err != nil {
 		fail(err)

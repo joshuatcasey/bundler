@@ -27,6 +27,12 @@ type BundlerRelease struct {
 	SHA     string `json:"sha"`
 }
 
+// Copy of cargo config structure, with the addition of the Target field
+type Dependency struct {
+	cargo.ConfigMetadataDependency
+	Version string `toml:"version"          json:"version,omitempty"`
+}
+
 var id = "bundler"
 
 func main() {
@@ -48,7 +54,7 @@ func main() {
 	}
 
 	fmt.Printf("generating metadata for %v\n", versionsFilteredByPatches)
-	allDependencies := []cargo.ConfigMetadataDependency{}
+	allDependencies := []Dependency{}
 	for _, version := range versionsFilteredByPatches {
 		dependencyVersions := getDependencyVersion(version)
 		allDependencies = append(allDependencies, dependencyVersions...)
@@ -68,10 +74,10 @@ func main() {
 
 func filterToPatches(versionsFilteredByConstraints map[string][]*semver.Version, config cargo.Config, buildpackVersions []string) []string {
 	var versionsToAdd []*semver.Version
-	for constraintId, versions := range versionsFilteredByConstraints {
+	for constraintID, versions := range versionsFilteredByConstraints {
 		var buildpackConstraint cargo.ConfigMetadataDependencyConstraint
 		for _, constraint := range config.Metadata.DependencyConstraints {
-			if constraint.ID == constraintId {
+			if constraint.ID == constraintID {
 				buildpackConstraint = constraint
 			}
 		}
@@ -170,17 +176,17 @@ func getBuildpackVersions(config cargo.Config) []string {
 	return buildpackVersions
 }
 
-func getDependencyVersion(version string) []cargo.ConfigMetadataDependency {
+func getDependencyVersion(version string) []Dependency {
 	bundlerReleases := getPrettyRubyGemVersions()
 	targets := map[string][]string{"bionic": []string{"io.buildpacks.stacks.bionic"}, "jammy": []string{"io.buildpacks.stacks.jammy"}}
-	dependencies := []cargo.ConfigMetadataDependency{}
+	dependencies := []Dependency{}
 
 	depURL := fmt.Sprintf("https://rubygems.org/downloads/bundler-%s.gem", version)
 	for _, release := range bundlerReleases {
 		if release.Version.String() == version {
 			for target, stacks := range targets {
 				dependencies = append(dependencies,
-					cargo.ConfigMetadataDependency{
+					Dependency{
 						Version:         version,
 						ID:              "bundler",
 						Name:            "Bundler",
