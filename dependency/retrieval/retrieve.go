@@ -15,10 +15,9 @@ import (
 	"github.com/anchore/packageurl-go"
 	"github.com/go-enry/go-license-detector/v4/licensedb"
 	"github.com/go-enry/go-license-detector/v4/licensedb/filer"
-	"github.com/joshuatcasey/bundler/libdependency/common"
+	"github.com/joshuatcasey/bundler/retrieval/helpers"
 	"github.com/paketo-buildpacks/packit/v2/cargo"
 	"github.com/paketo-buildpacks/packit/v2/vacation"
-	"golang.org/x/exp/slices"
 )
 
 type BundlerRelease struct {
@@ -27,112 +26,11 @@ type BundlerRelease struct {
 	SHA     string `json:"sha"`
 }
 
-// Copy of cargo config structure, with the addition of the Target field
-type Dependency struct {
-	cargo.ConfigMetadataDependency
-	Target string `toml:"target"          json:"target,omitempty"`
-}
-
-var id = "bundler"
-
 func main() {
 	buildpackTomlPath := os.Args[1]
 	output := os.Args[2]
 
-	fmt.Printf("buildpackTomlPath=%s\n", buildpackTomlPath)
-	fmt.Printf("output=%s\n", output)
-
-	config := common.ParseBuildpackToml(buildpackTomlPath)
-
-	buildpackVersions := getBuildpackVersions(config)
-	rubyGemVersions := getRubyGemVersions()
-	versionsFilteredByConstraints := filterToConstraints(config, rubyGemVersions)
-	versionsFilteredByPatches := filterToPatches(versionsFilteredByConstraints, config, buildpackVersions)
-
-	if len(versionsFilteredByPatches) < 1 {
-		panic("No versions found")
-	}
-
-	fmt.Printf("generating metadata for %v\n", versionsFilteredByPatches)
-	allDependencies := []Dependency{}
-	for _, version := range versionsFilteredByPatches {
-		dependencyVersions := getDependencyVersion(version)
-		allDependencies = append(allDependencies, dependencyVersions...)
-	}
-
-	bytes, err := json.Marshal(allDependencies)
-	if err != nil {
-		panic(fmt.Errorf("cannot marshal: %w", err))
-	}
-	err = os.WriteFile(output, bytes, os.ModePerm)
-	if err != nil {
-		panic(fmt.Errorf("cannot write to %s: %w", output, err))
-	}
-
-	fmt.Println("done!")
-}
-
-func filterToPatches(versionsFilteredByConstraints map[string][]*semver.Version, config cargo.Config, buildpackVersions []string) []string {
-	var versionsToAdd []*semver.Version
-	for constraintID, versions := range versionsFilteredByConstraints {
-		var buildpackConstraint cargo.ConfigMetadataDependencyConstraint
-		for _, constraint := range config.Metadata.DependencyConstraints {
-			if constraint.ID == constraintID {
-				buildpackConstraint = constraint
-			}
-		}
-
-		sort.Slice(versions, func(i, j int) bool {
-			return versions[i].LessThan(versions[j])
-		})
-
-		// if there are more requested patches than matching dependencies, just
-		// return all matching dependencies.
-		if buildpackConstraint.Patches > len(versions) {
-			continue
-		}
-
-		// Buildpack.toml dependencies are usually in order from lowest to highest
-		// version. We want to return the the n largest matching dependencies in the
-		// same order, n being the constraint.Patches field from the buildpack.toml.
-		// Here, we are returning the n highest matching Dependencies.
-		versionsToAdd = append(versionsToAdd, versions[len(versions)-buildpackConstraint.Patches:]...)
-	}
-
-	var versionsAsStrings []string
-	for _, version := range versionsToAdd {
-		versionAsString := version.String()
-		if !slices.Contains(buildpackVersions, versionAsString) {
-			versionsAsStrings = append(versionsAsStrings, versionAsString)
-		}
-	}
-
-	return versionsAsStrings
-}
-
-func filterToConstraints(config cargo.Config, rubyGemVersions []*semver.Version) map[string][]*semver.Version {
-	semverConstraints := make(map[string]*semver.Constraints)
-	for _, constraint := range config.Metadata.DependencyConstraints {
-		if constraint.ID != id {
-			continue
-		}
-
-		semverConstraint, err := semver.NewConstraint(constraint.Constraint)
-		if err != nil {
-			panic(err)
-		}
-		semverConstraints[constraint.ID] = semverConstraint
-	}
-
-	newVersions := make(map[string][]*semver.Version)
-	for _, version := range rubyGemVersions {
-		for constraintId, constraint := range semverConstraints {
-			if constraint.Check(version) {
-				newVersions[constraintId] = append(newVersions[constraintId], version)
-			}
-		}
-	}
-	return newVersions
+	helpers.Retrieve("bundler", buildpackTomlPath, output, getRubyGemVersions, getDependencyVersion)
 }
 
 func getRubyGemVersions() []*semver.Version {
@@ -165,27 +63,16 @@ func getRubyGemVersions() []*semver.Version {
 	return rubyGemVersions
 }
 
-func getBuildpackVersions(config cargo.Config) []string {
-	var buildpackVersions []string
-	for _, d := range config.Metadata.Dependencies {
-		if d.ID != id {
-			continue
-		}
-		buildpackVersions = append(buildpackVersions, d.Version)
-	}
-	return buildpackVersions
-}
-
-func getDependencyVersion(version string) []Dependency {
+func getDependencyVersion(version string) []helpers.Dependency {
 	bundlerReleases := getPrettyRubyGemVersions()
 	targets := map[string][]string{"bionic": []string{"io.buildpacks.stacks.bionic"}, "jammy": []string{"io.buildpacks.stacks.jammy"}}
-	dependencies := []Dependency{}
+	dependencies := []helpers.Dependency{}
 
 	depURL := fmt.Sprintf("https://rubygems.org/downloads/bundler-%s.gem", version)
 	for _, release := range bundlerReleases {
 		if release.Version.String() == version {
 			for target, stacks := range targets {
-				dep := Dependency{
+				dep := helpers.Dependency{
 					Target: target,
 				}
 
