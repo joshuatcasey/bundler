@@ -57,6 +57,32 @@ api = "0.7"
     uri = "https://deps.paketo.io/bundler/bundler_2.3.20_linux_noarch_bionic_bfabce41.tgz"
     version = "2.3.20"
 
+  [[metadata.dependencies]]
+    cpe = "cpe:2.3:a:bundler:bundler:2.3.21:*:*:*:*:ruby:*:*"
+    id = "bundler"
+    licenses = ["MIT", "MIT-0"]
+    name = "Bundler"
+    purl = "pkg:generic/bundler@2.3.21?checksum=faedc7ffc167a3c53b64c463da67b50d5be43804761de5a68dda344c21bfd1de&download_url=https://rubygems.org/downloads/bundler-2.3.21.gem"
+    sha256 = "5fa0a6144b308cee3a55c03406a25513fb443546d035b284a939330885110fa2  bundler-2.3.21-bionic.tgz"
+    source = "https://rubygems.org/downloads/bundler-2.3.21.gem"
+    source_sha256 = "faedc7ffc167a3c53b64c463da67b50d5be43804761de5a68dda344c21bfd1de"
+    stacks = ["io.buildpacks.stacks.bionic"]
+    uri = "123456"
+    version = "2.3.21"
+
+  [[metadata.dependencies]]
+    cpe = "cpe:2.3:a:bundler:bundler:2.3.21:*:*:*:*:ruby:*:*"
+    id = "bundler"
+    licenses = ["MIT", "MIT-0"]
+    name = "Bundler"
+    purl = "pkg:generic/bundler@2.3.21?checksum=faedc7ffc167a3c53b64c463da67b50d5be43804761de5a68dda344c21bfd1de&download_url=https://rubygems.org/downloads/bundler-2.3.21.gem"
+    sha256 = "d5bf15f1d042540e477d0c001f1250bdf33029403198308d46f8dad3d72830d8  bundler-2.3.21-jammy.tgz"
+    source = "https://rubygems.org/downloads/bundler-2.3.21.gem"
+    source_sha256 = "faedc7ffc167a3c53b64c463da67b50d5be43804761de5a68dda344c21bfd1de"
+    stacks = ["io.buildpacks.stacks.jammy"]
+    uri = "123456"
+    version = "2.3.21"
+
   [[metadata.dependency-constraints]]
     constraint = "1.*.*"
     id = "bundler"
