@@ -183,20 +183,20 @@ jobs:
           echo "::set-output name=artifact-file::$(basename *.tgz)"
           echo "::set-output name=checksum-file::$(basename *.tgz.checksum)"
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_S3_DEPENDENCIES_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_S3_DEPENDENCIES_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_S3_DEPENDENCIES_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_S3_DEPENDENCIES_SECRET_ACCESS_KEY }}
+      #     aws-region: us-east-1
 
-      - name: Upload to S3
-        id: upload
-        uses: paketo-buildpacks/github-config/actions/dependency/upload-to-s3@dependency-workflow
-        with:
-          bucket-name: "paketo-buildpacks"
-          dependency-name: ${{ needs.retrieve.outputs.id }}
-          artifact-path: ${{ steps.get-file-names.outputs.artifact-file }}
+      # - name: Upload to S3
+      #   id: upload
+      #   uses: paketo-buildpacks/github-config/actions/dependency/upload-to-s3@dependency-workflow
+      #   with:
+      #     bucket-name: "paketo-buildpacks"
+      #     dependency-name: ${{ needs.retrieve.outputs.id }}
+      #     artifact-path: ${{ steps.get-file-names.outputs.artifact-file }}
 
       - name: Get Checksum
         id: get-checksum
@@ -214,7 +214,7 @@ jobs:
           version: ${{ matrix.includes.version }}
           target: ${{ matrix.includes.target }}
           checksum: ${{ steps.get-checksum.outputs.checksum }}
-          uri: ${{ steps.upload.outputs.dependency-uri }}
+          uri: "random-uri"
           file: "metadata.json"
 
       - name: Upload modified metadata
