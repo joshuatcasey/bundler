@@ -1,4 +1,4 @@
-name: Dependencies (Retrieve, Metadata, Compile, Test, Create PR)
+name: Update Dependencies From Metadata (Retrieve, Metadata, Compile, Test, Create PR)
 
 on:
   workflow_dispatch:
@@ -17,7 +17,6 @@ jobs:
         id: select-go-version
         run: echo "::set-output name=go-version::>=1.18.0"
 
-  # TODO: what happens when there are no new versions
   retrieve:
     name: Retrieve New Versions and Generate Metadata
     needs:
@@ -103,7 +102,7 @@ jobs:
     # Run job step if
     #   (1) needs.get-compile-and-test.outputs.should-compile -> if there is a dependency/actions/compile directory in the buildpack
     #   (2) needs.get-compile-and-test.outputs.should-test -> if there is a dependency/test directory in the buildpack
-    #   (3) See line 113 -> if the dependency SHA256 and URI field are empty, signaling they need to be calculated
+    #   (3) See line 113 -> if the dependency checksum and URI field are empty, signaling they need to be calculated
     if: ${{ needs.get-compile-and-test.outputs.should-compile == 'true' || needs.get-compile-and-test.outputs.should-test == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -117,21 +116,21 @@ jobs:
 
       # Compile if all of the following conditions are met:
       #   (1) compilation Github Action presetn in the buildpack directory
-      #   (2) SHA256 in metadata.json is empty
+      #   (2) checksum in metadata.json is empty
       #   (3) URI in metadata.json is empty
       - name: Compile version ${{ matrix.includes.version }} on ${{ matrix.includes.target }} Dockerfile
         id: compile
-        if: ${{ needs.get-compile-and-test.outputs.should-compile && matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
+        if: ${{ needs.get-compile-and-test.outputs.should-compile && matrix.includes.checksum == '' && matrix.includes.uri == '' }}
         uses: ./dependency/actions/compile
         with:
           version: "${{ matrix.includes.version }}"
           outputdir: "${{ steps.make-outputdir.outputs.outputdir }}"
           target: "${{ matrix.includes.target }}"
 
-      # If compiled, upload the tarball and SHA256 file for usage in the Update metadata job
+      # If compiled, upload the tarball and checksum file for usage in the Update metadata job
       - name: Upload workflow asset
         uses: actions/upload-artifact@v3
-        if: ${{ needs.get-compile-and-test.outputs.should-compile && matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
+        if: ${{ needs.get-compile-and-test.outputs.should-compile && matrix.includes.checksum == '' && matrix.includes.uri == '' }}
         with:
           name: '${{ needs.retrieve.outputs.id }}-${{ matrix.includes.version }}-${{ matrix.includes.target }}'
           path: '${{ steps.make-outputdir.outputs.outputdir }}/*'
@@ -154,6 +153,7 @@ jobs:
             version="${{ matrix.includes.version }}" \
             tarballPath="${{ steps.make-outputdir.outputs.outputdir }}/*.tgz"
 
+  # Add in the checksum and URI fields to the metadata if the dependency was compiled
   update-metadata:
     name: Update Metadata (if compiled)
     needs:
@@ -172,33 +172,49 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      ## TODO:
-      #   add a bucket upload mechanism
-      #   add a step for when upload happens, we update the SHA and URI (steps.parse-matrix.outputs.uri updated)
-      #   tje Update SHA256 and URi step will change.
-      - name: Download SHA256 file
+      - name: Download artifact files
         uses: actions/download-artifact@v3
         with:
           name: '${{ needs.retrieve.outputs.id }}-${{ matrix.includes.version }}-${{ matrix.includes.target }}'
 
-      - name: Get SHA256
-        id: get-sha256
-        run: echo "::set-output name=sha256::$(cat ${{ needs.retrieve.outputs.id }}-${{ matrix.includes.version }}-${{ matrix.includes.target }}.tgz.sha256)"
+      - name: Get artifact file name
+        id: get-file-names
+        run: |
+          echo "::set-output name=artifact-file::$(basename *.tgz)"
+          echo "::set-output name=checksum-file::$(basename *.tgz.checksum)"
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_S3_DEPENDENCIES_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_S3_DEPENDENCIES_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Upload to S3
+        id: upload
+        uses: paketo-buildpacks/github-config/actions/upload-to-s3@main
+        with:
+          bucket-name: "paketo-buildpacks"
+          dependency-name: ${{ needs.retrieve.outputs.id }}
+          artifact-path: ${{ steps.get-file-names.outputs.artifact-file }}
+
+      - name: Get Checksum
+        id: get-checksum
+        run: echo "::set-output name=checksum::$(cat ${{ steps.get-file-names.outputs.checksum-file }})"
 
       - name: Download metadata.json
         uses: actions/download-artifact@v3
         with:
           name: metadata.json
 
-      - name: Update `sha256` and `uri` in metadata for ${{ matrix.includes.target }} ${{ matrix.includes.version }}
-        if: ${{ matrix.includes.sha256 == '' && matrix.includes.uri == '' }}
-        uses: ./dependency/actions/update-json
+      - name: Update `checksum` and `uri` in metadata for ${{ matrix.includes.target }} ${{ matrix.includes.version }}
+        if: ${{ matrix.includes.checksum == '' && matrix.includes.uri == '' }}
+        uses: paketo-buildpacks/github-config/actions/dependency/update-metadata-json@dependency-workflow
         with:
-          version: "${{ matrix.includes.version }}"
-          target: "${{ matrix.includes.target }}"
-          sha256: ${{ steps.get-sha256.outputs.sha256 }}
-          # TODO
-          uri: "123456"
+          version: ${{ matrix.includes.version }}
+          target: ${{ matrix.includes.target }}
+          checksum: ${{ steps.get-checksum.outputs.checksum }}
+          uri: ${{ steps.upload.outputs.dependency-uri }}
           file: "metadata.json"
 
       - name: Upload modified metadata
@@ -241,7 +257,7 @@ jobs:
 
       - name: Update dependencies from metadata.json
         id: update
-        uses: ./dependency/actions/update
+        uses: paketo-buildpacks/github-config/actions/dependency/update-from-metadata@main
         with:
           buildpack_toml_path: "${{ github.workspace }}/buildpack.toml"
           metadata_file_path: "${{ steps.make-outputdir.outputs.outputdir }}/metadata.json"
@@ -267,7 +283,6 @@ jobs:
         if: ${{ steps.commit.outputs.commit_sha != '' }}
         uses: paketo-buildpacks/github-config/actions/pull-request/open@main
         with:
-          #TODO: CHANGE THIS TOKEN and any others
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAKETO_BOT_GITHUB_TOKEN }}
           title: "Updates buildpack.toml with ${{ steps.update.outputs.new-versions }}"
           branch: automation/buildpack.toml/update-from-metadata

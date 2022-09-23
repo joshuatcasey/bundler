@@ -7,7 +7,7 @@ require (
 	github.com/anchore/packageurl-go v0.1.1-0.20220428202044-a072fa3cb6d7
 	github.com/go-enry/go-license-detector/v4 v4.3.0
 	github.com/joshuatcasey/bundler/libdependency/common v0.0.0-20220615212510-d0acf95765c6
-	github.com/paketo-buildpacks/packit/v2 v2.4.2
+	github.com/paketo-buildpacks/packit/v2 v2.5.1
 	golang.org/x/exp v0.0.0-20220608143224-64259d1afd70
 )
 
@@ -33,10 +33,10 @@ require (
 	github.com/shogo82148/go-shuffle v0.0.0-20170808115208-59829097ff3b // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/xanzy/ssh-agent v0.2.1 // indirect
-	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
-	golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e // indirect
-	golang.org/x/sys v0.0.0-20220624220833-87e55d714810 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90 // indirect
+	golang.org/x/net v0.0.0-20220826154423-83b083e8dc8b // indirect
+	golang.org/x/sys v0.0.0-20220907062415-87db552b00fd // indirect
+	golang.org/x/text v0.3.8-0.20211004125949-5bd84dd9b33b // indirect
 	gonum.org/v1/gonum v0.7.0 // indirect
 	gopkg.in/neurosnap/sentences.v1 v1.0.6 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect

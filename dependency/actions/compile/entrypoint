@@ -62,7 +62,7 @@ function main() {
   popd > /dev/null
 
   pushd "${output_dir}" > /dev/null
-    sha256sum "${tarball_name}" > "${tarball_name}.sha256"
+    echo "sha256:"$(sha256sum "${tarball_name}") > "${tarball_name}.checksum"
   popd > /dev/null
 
 

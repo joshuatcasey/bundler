@@ -194,7 +194,7 @@ func getDependencyVersion(version string) []Dependency {
 					ID:              "bundler",
 					Name:            "Bundler",
 					Source:          depURL,
-					SourceSHA256:    release.SHA,
+					SourceChecksum:  fmt.Sprintf("sha256:%s", release.SHA),
 					DeprecationDate: nil,
 					CPE:             fmt.Sprintf("cpe:2.3:a:bundler:bundler:%s:*:*:*:*:ruby:*:*", version),
 					PURL:            generatePURL("bundler", version, release.SHA, depURL),
